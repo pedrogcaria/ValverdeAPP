@@ -190,6 +190,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
         <div class="section-title">Gastos desta reserva</div>
         <div id="det-gastos"></div>
       </div>
+      <button onclick="deleteReserva()" style="width:100%;padding:14px;background:none;color:#A32D2D;border:1px solid #A32D2D;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;margin-bottom:16px;">&#128465; Apagar reserva</button>
     </div>
   </div>
 
@@ -463,6 +464,13 @@ function openBD(i) {
 }
 
 function closeBookingDetail() { document.getElementById('reservas-list').style.display='block'; document.getElementById('booking-detail').classList.remove('open'); }
+
+function deleteReserva() {
+  const b = S.bookings[curBookingIdx];
+  if (!confirm('Apagar a reserva de ' + b.name + '?\nEsta ação não pode ser desfeita.')) return;
+  S.bookings.splice(curBookingIdx, 1);
+  persist(); renderAll(); closeBookingDetail();
+}
 
 function renderPag(p) {
   ['pag-nao','pag-parc','pag-pago'].forEach(id=>document.getElementById(id).className='pag-btn');
