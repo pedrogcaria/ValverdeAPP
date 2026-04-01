@@ -263,12 +263,13 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
       <div class="modal-handle"></div>
       <h2>Importar do Booking.com</h2>
       <div id="imp1">
-        <div class="import-zone" onclick="startImport()">
+        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" />
+        <div class="import-zone" onclick="document.getElementById('photo-input').click()">
           <div style="font-size:36px;margin-bottom:8px;">&#128247;</div>
           <div style="font-size:15px;color:#555;font-weight:500;">Tira ou carrega uma foto</div>
           <div style="font-size:12px;color:#888;margin-top:6px;">Página de detalhes da reserva no Booking.com</div>
         </div>
-        <button class="btn-secondary" onclick="startImport()">Simular com exemplo (Holly Thompstone)</button>
+        <button class="btn-import" onclick="document.getElementById('photo-input').click()">&#128247; Abrir câmara / galeria</button>
         <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
       </div>
       <div id="imp2" style="display:none">
@@ -280,17 +281,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
         <div class="success-banner"><span>&#10003; Dados extraídos com sucesso</span></div>
         <div class="card" style="margin-bottom:12px;">
           <div class="section-title">Dados extraídos</div>
-          <div class="extracted-field"><span class="extracted-key">Hóspede</span><span class="extracted-val" style="color:#185FA5">Holly Thompstone</span></div>
-          <div class="extracted-field"><span class="extracted-key">Nacionalidade</span><span class="extracted-val">Reino Unido</span></div>
-          <div class="extracted-field"><span class="extracted-key">Email</span><span class="extracted-val" style="font-size:11px;color:#185FA5">hthomp.609751@guest.booking.com</span></div>
-          <div class="extracted-field"><span class="extracted-key">Telefone</span><span class="extracted-val">+44 7878 714176</span></div>
-          <div class="extracted-field"><span class="extracted-key">Check-in</span><span class="extracted-val">18 Jul 2026</span></div>
-          <div class="extracted-field"><span class="extracted-key">Check-out</span><span class="extracted-val">25 Jul 2026</span></div>
-          <div class="extracted-field"><span class="extracted-key">Hóspedes</span><span class="extracted-val">5 adultos, 4 crianças</span></div>
-          <div class="extracted-field"><span class="extracted-key">Preço total</span><span class="extracted-val" style="color:#185FA5">5.300 €</span></div>
-          <div class="extracted-field"><span class="extracted-key">Comissão</span><span class="extracted-val" style="color:#A32D2D">–861,70 €</span></div>
-          <div class="extracted-field"><span class="extracted-key">Receita líquida</span><span class="extracted-val" style="color:#0F6E56">4.438,30 €</span></div>
-          <div class="extracted-field"><span class="extracted-key">Nº reserva</span><span class="extracted-val">5883498564</span></div>
+          <div id="imp3-fields"></div>
         </div>
         <button class="btn-primary" onclick="confirmImport()">&#10003; Criar reserva e hóspede</button>
         <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
@@ -520,17 +511,63 @@ function closeModal(id) {
   if(id==='m-import'){ document.getElementById('imp1').style.display='block'; document.getElementById('imp2').style.display='none'; document.getElementById('imp3').style.display='none'; }
 }
 
-function startImport() {
-  document.getElementById('imp1').style.display='none'; document.getElementById('imp2').style.display='block';
-  const bar=document.getElementById('imp-bar'),msgs=['A identificar hóspede...','A extrair datas...','A calcular comissão...','Quase pronto...'];
-  let i=0,w=0; const iv=setInterval(()=>{ w+=26; bar.style.width=Math.min(w,100)+'%'; if(i<msgs.length) document.getElementById('imp-msg').textContent=msgs[i++]; if(w>=100){clearInterval(iv);setTimeout(()=>{document.getElementById('imp2').style.display='none';document.getElementById('imp3').style.display='block';},300);} },700);
+let importedData = null;
+
+function handlePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(',')[1];
+    document.getElementById('imp1').style.display='none';
+    document.getElementById('imp2').style.display='block';
+    const bar=document.getElementById('imp-bar'), msgEl=document.getElementById('imp-msg');
+    const msgs=['A identificar hóspede...','A extrair datas...','A calcular comissão...','A verificar dados...'];
+    let i=0, w=0;
+    const iv=setInterval(()=>{ w+=12; bar.style.width=Math.min(w,80)+'%'; if(i<msgs.length) msgEl.textContent=msgs[i++]; },900);
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514', max_tokens:1000,
+          messages:[{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type:file.type, data:base64 }},
+            { type:'text', text:'Esta é uma página de reserva do Booking.com. Extrai em JSON puro (sem markdown): name, nationality, email, phone, checkin (YYYY-MM-DD), checkout (YYYY-MM-DD), guests (número total), price (número), comissao (número se existir), reservaNum, notes. Campos ausentes usa null.' }
+          ]}]
+        })
+      });
+      const data = await resp.json();
+      clearInterval(iv); bar.style.width='100%';
+      importedData = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      setTimeout(()=>{ document.getElementById('imp2').style.display='none'; renderExtracted(importedData); document.getElementById('imp3').style.display='block'; },400);
+    } catch(err) {
+      clearInterval(iv);
+      alert('Erro ao analisar. Tenta de novo ou cria manualmente.');
+      document.getElementById('imp2').style.display='none';
+      document.getElementById('imp1').style.display='block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderExtracted(d) {
+  const liq = (d.price && d.comissao) ? (parseFloat(d.price)-parseFloat(d.comissao)).toFixed(2)+' €' : null;
+  const fields = [
+    ['Hóspede',d.name],['Nacionalidade',d.nationality],['Email',d.email],['Telefone',d.phone],
+    ['Check-in',d.checkin],['Check-out',d.checkout],['Hóspedes',d.guests],
+    ['Preço total',d.price?d.price+' €':null],['Comissão',d.comissao?'–'+d.comissao+' €':null],
+    ['Receita líquida',liq],['Nº reserva',d.reservaNum],['Notas',d.notes]
+  ].filter(f=>f[1]);
+  document.getElementById('imp3-fields').innerHTML=fields.map(f=>`<div class="extracted-field"><span class="extracted-key">${f[0]}</span><span class="extracted-val">${f[1]}</span></div>`).join('');
 }
 
 function confirmImport() {
-  const gid=uid(),g={id:gid,name:'Holly Thompstone',email:'hthomp.609751@guest.booking.com',phone:'+44 7878 714176',nationality:'Reino Unido'};
+  const d=importedData||{};
+  const gid=uid(), g={id:gid,name:d.name||'Hóspede',email:d.email||'',phone:d.phone||'',nationality:d.nationality||''};
   S.guests.push(g);
-  S.bookings.push({id:uid(),guestId:gid,name:'Holly Thompstone',canal:'Booking.com',checkin:'2026-07-18',checkout:'2026-07-25',guests:'9',price:'5300',payment:'OTA',pagamento:'Não pago',status:'Pendente',email:g.email,phone:g.phone,reservaNum:'5883498564',comissao:'861.70'});
-  persist(); renderAll(); closeModal('m-import');
+  S.bookings.push({id:uid(),guestId:gid,name:g.name,canal:'Booking.com',checkin:d.checkin||'',checkout:d.checkout||'',guests:String(d.guests||''),price:String(d.price||''),payment:'OTA',pagamento:'Não pago',status:'Pendente',email:g.email,phone:g.phone,reservaNum:d.reservaNum||'',comissao:String(d.comissao||'')});
+  persist(); renderAll(); closeModal('m-import'); importedData=null;
 }
 
 function saveReserva() {
