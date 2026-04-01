@@ -1,1 +1,557 @@
-<h1>Valverde</h1>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Valverde App</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Valverde">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: center; }
+.app { width: 100%; max-width: 430px; background: #f5f5f0; min-height: 100vh; position: relative; display: flex; flex-direction: column; }
+.topbar { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 52px 20px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+.topbar h1 { font-size: 20px; font-weight: 600; color: #111; }
+.topbar p { font-size: 12px; color: #888; margin-top: 2px; }
+.logo-badge { background: #185FA5; color: #fff; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 20px; letter-spacing: 0.03em; }
+.screen { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; display: none; }
+.screen.active { display: block; }
+.bottomnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 0.5px solid rgba(0,0,0,0.1); display: flex; height: 68px; padding-bottom: env(safe-area-inset-bottom); z-index: 10; }
+.navbtn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: none; font-size: 10px; color: #999; padding: 0; }
+.navbtn.active { color: #185FA5; }
+.navicon { font-size: 22px; line-height: 1; }
+.card { background: #fff; border: 0.5px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.metric { background: #f5f5f0; border-radius: 10px; padding: 12px; }
+.metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.metric-value { font-size: 20px; font-weight: 600; color: #111; }
+.section-title { font-size: 11px; font-weight: 600; color: #999; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.booking-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); cursor: pointer; }
+.booking-item:last-child { border-bottom: none; }
+.booking-name { font-size: 14px; font-weight: 600; color: #111; }
+.booking-dates { font-size: 12px; color: #888; margin-top: 2px; }
+.booking-right { text-align: right; flex-shrink: 0; margin-left: 8px; }
+.booking-price { font-size: 14px; font-weight: 600; color: #111; }
+.badges { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+.badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; display: inline-block; }
+.badge-pending { background: #FAEEDA; color: #633806; }
+.badge-confirmed { background: #E6F1FB; color: #0C447C; }
+.badge-checkin { background: #EAF3DE; color: #27500A; }
+.badge-checkout { background: #e0e0e0; color: #444; }
+.badge-cancelled { background: #FCEBEB; color: #791F1F; }
+.badge-pago { background: #EAF3DE; color: #27500A; }
+.badge-nao-pago { background: #FCEBEB; color: #791F1F; }
+.badge-parcial { background: #FAEEDA; color: #633806; }
+.fab { position: fixed; bottom: 82px; right: calc(50% - 215px + 16px); width: 52px; height: 52px; border-radius: 50%; background: #185FA5; color: #fff; border: none; font-size: 28px; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 9; box-shadow: 0 2px 12px rgba(24,95,165,0.3); }
+@media (max-width: 430px) { .fab { right: 16px; } }
+.filter-row { display: flex; gap: 7px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-chip { font-size: 12px; padding: 6px 14px; border-radius: 20px; border: 0.5px solid rgba(0,0,0,0.15); background: #fff; color: #666; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.filter-chip.active { background: #185FA5; color: #fff; border-color: #185FA5; }
+.expense-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.expense-item:last-child { border-bottom: none; }
+.expense-cat { font-size: 11px; color: #888; margin-top: 2px; }
+.expense-amount { font-size: 14px; font-weight: 600; color: #A32D2D; flex-shrink: 0; margin-left: 8px; }
+.guest-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); cursor: pointer; }
+.guest-item:last-child { border-bottom: none; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: #E6F1FB; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #185FA5; flex-shrink: 0; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 30; align-items: flex-end; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); width: 100%; max-width: 430px; max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.modal-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 16px; }
+.modal h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #111; }
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 12px; color: #888; margin-bottom: 5px; display: block; font-weight: 500; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 10px; font-size: 15px; background: #fff; color: #111; -webkit-appearance: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-primary { width: 100%; padding: 14px; background: #185FA5; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.btn-secondary { width: 100%; padding: 12px; background: none; color: #666; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 12px; font-size: 15px; cursor: pointer; margin-top: 8px; }
+.btn-import { width: 100%; padding: 14px; background: #EBF4FF; color: #185FA5; border: 1.5px solid #185FA5; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.detail-view { display: none; }
+.detail-view.open { display: block; }
+.back-btn { display: flex; align-items: center; gap: 6px; font-size: 15px; color: #185FA5; cursor: pointer; margin-bottom: 16px; background: none; border: none; padding: 0; font-weight: 500; }
+.detail-field { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.detail-field:last-child { border-bottom: none; }
+.detail-key { font-size: 13px; color: #888; }
+.detail-val { font-size: 13px; font-weight: 600; color: #111; text-align: right; max-width: 65%; word-break: break-all; }
+.workflow { display: flex; gap: 6px; margin: 8px 0; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.workflow::-webkit-scrollbar { display: none; }
+.wf-btn { font-size: 12px; padding: 8px 14px; border-radius: 20px; border: 0.5px solid rgba(0,0,0,0.15); background: #f5f5f0; color: #666; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.wf-btn.active { background: #185FA5; color: #fff; border-color: #185FA5; }
+.wf-btn.cancel { border-color: #A32D2D; color: #A32D2D; }
+.pag-btns { display: flex; gap: 8px; margin-top: 8px; }
+.pag-btn { flex: 1; font-size: 12px; padding: 9px 4px; border-radius: 10px; border: 0.5px solid rgba(0,0,0,0.15); background: #f5f5f0; color: #666; cursor: pointer; text-align: center; font-weight: 500; }
+.pag-btn.active-pago { background: #EAF3DE; color: #27500A; border-color: #97C459; font-weight: 600; }
+.pag-btn.active-parcial { background: #FAEEDA; color: #633806; border-color: #FAC775; font-weight: 600; }
+.pag-btn.active-nao { background: #FCEBEB; color: #791F1F; border-color: #F7C1C1; font-weight: 600; }
+.import-zone { border: 2px dashed rgba(0,0,0,0.15); border-radius: 14px; padding: 28px 16px; text-align: center; cursor: pointer; margin-bottom: 16px; background: #f9f9f9; }
+.extracted-field { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.extracted-field:last-child { border-bottom: none; }
+.extracted-key { font-size: 12px; color: #888; }
+.extracted-val { font-size: 13px; font-weight: 600; color: #111; }
+.loading-bar { height: 4px; background: #eee; border-radius: 2px; margin: 12px 0; overflow: hidden; }
+.loading-bar-inner { height: 100%; background: #185FA5; border-radius: 2px; width: 0%; transition: width 0.4s ease; }
+.success-banner { background: #EAF3DE; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.success-banner span { font-size: 13px; color: #27500A; font-weight: 500; }
+.info-banner { background: #EBF4FF; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+.info-banner p { font-size: 13px; color: #0C447C; line-height: 1.6; }
+.info-banner code { font-size: 11px; background: #B5D4F4; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 8px; }
+.cal-header { font-size: 10px; color: #999; text-align: center; padding: 4px 0; }
+.cal-day { font-size: 11px; text-align: center; padding: 6px 2px; border-radius: 5px; }
+.cal-day.occupied { background: #B5D4F4; color: #042C53; font-weight: 500; }
+.cal-day.today { font-weight: 700; outline: 2px solid #185FA5; outline-offset: -1px; border-radius: 5px; }
+.cal-day.empty { color: transparent; pointer-events: none; }
+.empty-state { text-align: center; padding: 36px 20px; color: #aaa; font-size: 14px; }
+.saving { position: fixed; top: 60px; right: 16px; background: #185FA5; color: #fff; font-size: 11px; padding: 5px 12px; border-radius: 20px; display: none; z-index: 20; }
+.saving.show { display: block; }
+.comissao-row { display: flex; justify-content: space-between; padding: 6px 0; }
+.comissao-key { font-size: 12px; color: #888; }
+.comissao-val { font-size: 12px; font-weight: 600; color: #111; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div>
+      <h1 id="topbar-title">Valverde</h1>
+      <p id="topbar-sub"></p>
+    </div>
+    <div class="logo-badge">VV</div>
+  </div>
+  <div class="saving" id="saving">A guardar...</div>
+
+  <!-- DASHBOARD -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Receita este mês</div><div class="metric-value" style="color:#0F6E56" id="d-receita">0 €</div></div>
+      <div class="metric"><div class="metric-label">Gastos este mês</div><div class="metric-value" style="color:#A32D2D" id="d-gastos">0 €</div></div>
+      <div class="metric"><div class="metric-label">Lucro</div><div class="metric-value" id="d-lucro">0 €</div></div>
+      <div class="metric"><div class="metric-label">Por receber</div><div class="metric-value" style="color:#BA7517" id="d-porreceber">0 €</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" id="cal-title">Este mês</div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+        <div style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;"></div>
+        <span style="font-size:11px;color:#888;">Ocupado</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Próximas chegadas</div>
+      <div id="d-proximas"><div class="empty-state">Sem chegadas nos próximos 14 dias</div></div>
+    </div>
+  </div>
+
+  <!-- RESERVAS -->
+  <div class="screen" id="screen-reservas">
+    <div id="reservas-list">
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="filterChip(this,'r','Todas')">Todas</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Pendente')">Pendentes</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Confirmada')">Confirmadas</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Check-in feito')">Em estadia</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Check-out feito')">Concluídas</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Por pagar')">Por pagar</div>
+      </div>
+      <div class="card" id="reservas-container"><div class="empty-state">Sem reservas. Toca em + para adicionar.</div></div>
+    </div>
+    <div class="detail-view" id="booking-detail">
+      <button class="back-btn" onclick="closeBookingDetail()">&#8592; Reservas</button>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div><div style="font-size:17px;font-weight:600;color:#111" id="det-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="det-channel"></div></div>
+          <span class="badge" id="det-badge"></span>
+        </div>
+        <div class="detail-field"><span class="detail-key">Check-in</span><span class="detail-val" id="det-checkin"></span></div>
+        <div class="detail-field"><span class="detail-key">Check-out</span><span class="detail-val" id="det-checkout"></span></div>
+        <div class="detail-field"><span class="detail-key">Hóspedes</span><span class="detail-val" id="det-guests"></span></div>
+        <div class="detail-field"><span class="detail-key">Preço total</span><span class="detail-val" id="det-price"></span></div>
+        <div class="detail-field"><span class="detail-key">Método pag.</span><span class="detail-val" id="det-payment"></span></div>
+        <div class="detail-field" id="det-reserva-row" style="display:none"><span class="detail-key">Nº reserva</span><span class="detail-val" id="det-reserva"></span></div>
+        <div class="detail-field" id="det-email-row" style="display:none"><span class="detail-key">Email</span><span class="detail-val" id="det-email" style="color:#185FA5;font-size:12px;"></span></div>
+        <div class="detail-field" id="det-tel-row" style="display:none"><span class="detail-key">Telefone</span><span class="detail-val" id="det-tel"></span></div>
+        <div class="detail-field" id="det-com-row" style="display:none"><span class="detail-key">Comissão</span><span class="detail-val" style="color:#A32D2D" id="det-com"></span></div>
+        <div class="detail-field" id="det-liq-row" style="display:none"><span class="detail-key">Receita líquida</span><span class="detail-val" style="color:#0F6E56" id="det-liq"></span></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Estado de pagamento</div>
+        <div class="pag-btns">
+          <button class="pag-btn" id="pag-nao" onclick="setPagamento('Não pago')">Não pago</button>
+          <button class="pag-btn" id="pag-parc" onclick="setPagamento('Parcial')">Parcial</button>
+          <button class="pag-btn" id="pag-pago" onclick="setPagamento('Pago')">Pago</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Estado da reserva</div>
+        <div class="workflow" id="det-workflow"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Gastos desta reserva</div>
+        <div id="det-gastos"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div class="screen" id="screen-gastos">
+    <div class="filter-row">
+      <div class="filter-chip active" onclick="filterChip(this,'g','Todos')">Todos</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Limpeza')">Limpeza</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Obras')">Obras</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Manutenção')">Manutenção</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Eletricidade')">Eletricidade</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Água')">Água</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Internet')">Internet</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Consumíveis')">Consumíveis</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total este mês</div><div class="metric-value" style="color:#A32D2D" id="g-total">0 €</div></div>
+      <div class="metric"><div class="metric-label">Nº registos</div><div class="metric-value" id="g-count">0</div></div>
+    </div>
+    <div class="card" id="gastos-container"><div class="empty-state">Sem gastos. Toca em + para adicionar.</div></div>
+  </div>
+
+  <!-- HÓSPEDES -->
+  <div class="screen" id="screen-hospedes">
+    <div id="hospedes-list">
+      <div style="margin-bottom:12px;"><input type="text" placeholder="Pesquisar hóspede..." id="search-input" oninput="renderHospedes()" style="width:100%;padding:10px 14px;border:0.5px solid rgba(0,0,0,0.2);border-radius:12px;font-size:15px;background:#fff;color:#111;" /></div>
+      <div class="card" id="hospedes-container"><div class="empty-state">Sem hóspedes ainda.</div></div>
+    </div>
+    <div class="detail-view" id="guest-detail">
+      <button class="back-btn" onclick="closeGuestDetail()">&#8592; Hóspedes</button>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+          <div class="avatar" style="width:50px;height:50px;font-size:17px;" id="gd-avatar"></div>
+          <div><div style="font-size:17px;font-weight:600;color:#111" id="gd-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="gd-nat"></div></div>
+        </div>
+        <div class="detail-field"><span class="detail-key">Email</span><span class="detail-val" id="gd-email" style="color:#185FA5;font-size:12px;"></span></div>
+        <div class="detail-field"><span class="detail-key">Telefone</span><span class="detail-val" id="gd-phone"></span></div>
+        <div class="detail-field"><span class="detail-key">Reservas</span><span class="detail-val" id="gd-nres"></span></div>
+        <div class="detail-field"><span class="detail-key">Total pago</span><span class="detail-val" style="color:#0F6E56" id="gd-total"></span></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Histórico</div>
+        <div id="gd-hist"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <button class="navbtn active" onclick="switchTab('dashboard',this)"><span class="navicon">&#9636;</span><span>Dashboard</span></button>
+    <button class="navbtn" onclick="switchTab('reservas',this)"><span class="navicon">&#128197;</span><span>Reservas</span></button>
+    <button class="navbtn" onclick="switchTab('gastos',this)"><span class="navicon">&#128176;</span><span>Gastos</span></button>
+    <button class="navbtn" onclick="switchTab('hospedes',this)"><span class="navicon">&#128101;</span><span>Hóspedes</span></button>
+  </div>
+
+  <button class="fab" id="fab-btn" onclick="openFab()">+</button>
+
+  <!-- MODAL ESCOLHA -->
+  <div class="modal-overlay" id="m-choice">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Nova reserva</h2>
+      <button class="btn-import" onclick="openModal('m-import');closeModal('m-choice')">&#128247; Importar foto do Booking.com</button>
+      <button class="btn-primary" onclick="openModal('m-reserva');closeModal('m-choice')">&#9998; Criar manualmente</button>
+      <button class="btn-secondary" onclick="closeModal('m-choice')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORTAR -->
+  <div class="modal-overlay" id="m-import">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Importar do Booking.com</h2>
+      <div id="imp1">
+        <div class="import-zone" onclick="startImport()">
+          <div style="font-size:36px;margin-bottom:8px;">&#128247;</div>
+          <div style="font-size:15px;color:#555;font-weight:500;">Tira ou carrega uma foto</div>
+          <div style="font-size:12px;color:#888;margin-top:6px;">Página de detalhes da reserva no Booking.com</div>
+        </div>
+        <button class="btn-secondary" onclick="startImport()">Simular com exemplo (Holly Thompstone)</button>
+        <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
+      </div>
+      <div id="imp2" style="display:none">
+        <div style="font-size:13px;color:#888;margin-bottom:8px;">A analisar com IA...</div>
+        <div class="loading-bar"><div class="loading-bar-inner" id="imp-bar"></div></div>
+        <div style="font-size:12px;color:#888" id="imp-msg">A identificar hóspede...</div>
+      </div>
+      <div id="imp3" style="display:none">
+        <div class="success-banner"><span>&#10003; Dados extraídos com sucesso</span></div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="section-title">Dados extraídos</div>
+          <div class="extracted-field"><span class="extracted-key">Hóspede</span><span class="extracted-val" style="color:#185FA5">Holly Thompstone</span></div>
+          <div class="extracted-field"><span class="extracted-key">Nacionalidade</span><span class="extracted-val">Reino Unido</span></div>
+          <div class="extracted-field"><span class="extracted-key">Email</span><span class="extracted-val" style="font-size:11px;color:#185FA5">hthomp.609751@guest.booking.com</span></div>
+          <div class="extracted-field"><span class="extracted-key">Telefone</span><span class="extracted-val">+44 7878 714176</span></div>
+          <div class="extracted-field"><span class="extracted-key">Check-in</span><span class="extracted-val">18 Jul 2026</span></div>
+          <div class="extracted-field"><span class="extracted-key">Check-out</span><span class="extracted-val">25 Jul 2026</span></div>
+          <div class="extracted-field"><span class="extracted-key">Hóspedes</span><span class="extracted-val">5 adultos, 4 crianças</span></div>
+          <div class="extracted-field"><span class="extracted-key">Preço total</span><span class="extracted-val" style="color:#185FA5">5.300 €</span></div>
+          <div class="extracted-field"><span class="extracted-key">Comissão</span><span class="extracted-val" style="color:#A32D2D">–861,70 €</span></div>
+          <div class="extracted-field"><span class="extracted-key">Receita líquida</span><span class="extracted-val" style="color:#0F6E56">4.438,30 €</span></div>
+          <div class="extracted-field"><span class="extracted-key">Nº reserva</span><span class="extracted-val">5883498564</span></div>
+        </div>
+        <button class="btn-primary" onclick="confirmImport()">&#10003; Criar reserva e hóspede</button>
+        <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOVA RESERVA -->
+  <div class="modal-overlay" id="m-reserva">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Nova reserva</h2>
+      <div class="form-group"><label class="form-label">Nome do hóspede *</label><input type="text" id="f-nome" placeholder="Nome completo" /></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" id="f-email" placeholder="email@exemplo.com" /></div>
+      <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="f-tel" placeholder="+351 9xx xxx xxx" /></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Check-in *</label><input type="date" id="f-checkin" /></div>
+        <div class="form-group"><label class="form-label">Check-out *</label><input type="date" id="f-checkout" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nº hóspedes</label><input type="number" id="f-guests" value="2" min="1" /></div>
+        <div class="form-group"><label class="form-label">Valor total (€) *</label><input type="number" id="f-price" placeholder="0" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Canal</label><select id="f-canal"><option>Booking.com</option><option>Airbnb</option><option>Direto</option><option>Outro</option></select></div>
+        <div class="form-group"><label class="form-label">Pagamento</label><select id="f-payment"><option>OTA</option><option>Transferência</option><option>MBWay</option><option>Numerário</option><option>Cartão</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="f-pagstatus"><option>Não pago</option><option>Parcial</option><option>Pago</option></select></div>
+      <button class="btn-primary" onclick="saveReserva()">Guardar reserva</button>
+      <button class="btn-secondary" onclick="closeModal('m-reserva')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL NOVO GASTO -->
+  <div class="modal-overlay" id="m-gasto">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>Novo gasto</h2>
+      <div class="form-group"><label class="form-label">Categoria</label><select id="g-cat"><option>Limpeza</option><option>Obras</option><option>Manutenção</option><option>Eletricidade</option><option>Água</option><option>Internet</option><option>Consumíveis</option><option>Outro</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Valor (€) *</label><input type="number" id="g-amount" placeholder="0" /></div>
+        <div class="form-group"><label class="form-label">Data *</label><input type="date" id="g-date" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="g-desc" placeholder="Ex: Limpeza após reserva Santos" /></div>
+      <div class="form-group"><label class="form-label">Pago a</label><input type="text" id="g-paidto" placeholder="Nome do fornecedor" /></div>
+      <div class="form-group"><label class="form-label">Associar a reserva (opcional)</label><select id="g-reserva"><option value="">Nenhuma</option></select></div>
+      <button class="btn-primary" onclick="saveGasto()">Guardar gasto</button>
+      <button class="btn-secondary" onclick="closeModal('m-gasto')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL SETUP GOOGLE SHEETS -->
+  <div class="modal-overlay open" id="m-setup">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>&#9881;&#65039; Configurar Valverde</h2>
+      <div class="info-banner">
+        <p>Para guardar dados no Google Sheets, precisas de um Google Apps Script. É feito uma vez e demora 5 minutos.<br><br>Ou começa já com <strong>dados locais</strong> (guardados no telemóvel).</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL do Google Apps Script (opcional)</label>
+        <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <button class="btn-primary" onclick="saveSetup()">Guardar e começar</button>
+      <button class="btn-secondary" onclick="useLocal()">Começar com dados locais</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '18bBC0KYR1xb3Th7Xnf0d7BIQ3aAiwfB4';
+let SCRIPT_URL = localStorage.getItem('vv_script') || '';
+let LOCAL = localStorage.getItem('vv_local') === '1';
+let S = { bookings: [], expenses: [], guests: [] };
+let curTab = 'dashboard', curBookingIdx = null, rFilter = 'Todas', gFilter = 'Todos';
+const badgeMap = { 'Pendente':'badge-pending','Confirmada':'badge-confirmed','Check-in feito':'badge-checkin','Check-out feito':'badge-checkout','Cancelada':'badge-cancelled' };
+const statuses = ['Pendente','Confirmada','Check-in feito','Check-out feito'];
+
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function fmt(d) { if(!d) return ''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('pt-PT',{day:'numeric',month:'short',year:'numeric'}); }
+function euro(v) { return parseFloat(v||0).toLocaleString('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0})+' €'; }
+
+function saveSetup() {
+  const url = document.getElementById('setup-url').value.trim();
+  if (url) { SCRIPT_URL = url; localStorage.setItem('vv_script', url); }
+  closeModal('m-setup'); loadData();
+}
+function useLocal() { LOCAL=true; localStorage.setItem('vv_local','1'); closeModal('m-setup'); loadLocal(); renderAll(); }
+
+async function loadData() {
+  if (LOCAL || !SCRIPT_URL) { loadLocal(); renderAll(); return; }
+  try {
+    const r = await fetch(SCRIPT_URL+'?action=getAll');
+    S = await r.json();
+    localStorage.setItem('vv_data', JSON.stringify(S));
+  } catch(e) { loadLocal(); }
+  renderAll();
+}
+function loadLocal() { const d=localStorage.getItem('vv_data'); if(d) S=JSON.parse(d); }
+async function persist() {
+  localStorage.setItem('vv_data', JSON.stringify(S));
+  if (!LOCAL && SCRIPT_URL) {
+    document.getElementById('saving').className='saving show';
+    try { await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveAll',data:S})}); } catch(e){}
+    document.getElementById('saving').className='saving';
+  }
+}
+
+function renderAll() { renderDash(); renderReservas(); renderGastos(); renderHospedes(); }
+
+function renderDash() {
+  const now=new Date(), m=now.getMonth(), y=now.getFullYear();
+  const mB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getMonth()===m&&d.getFullYear()===y&&b.status!=='Cancelada'; });
+  const rec=mB.reduce((s,b)=>s+parseFloat(b.price||0),0);
+  const mE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getMonth()===m&&d.getFullYear()===y; });
+  const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const por=S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada').reduce((s,b)=>s+parseFloat(b.price||0),0);
+  document.getElementById('d-receita').textContent=euro(rec);
+  document.getElementById('d-gastos').textContent=euro(gas);
+  document.getElementById('d-lucro').textContent=euro(rec-gas);
+  document.getElementById('d-porreceber').textContent=euro(por);
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-title').textContent=meses[m]+' '+y;
+  const dias=new Date(y,m+1,0).getDate(), prim=new Date(y,m,1).getDay(), off=prim===0?6:prim-1;
+  const occ=new Set();
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b=>{ const ci=new Date(b.checkin),co=new Date(b.checkout); for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)){ if(d.getMonth()===m&&d.getFullYear()===y) occ.add(d.getDate()); } });
+  const dw=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  document.getElementById('cal-grid').innerHTML=dw.map(d=>`<div class="cal-header">${d}</div>`).join('')+Array(off).fill('<div class="cal-day empty">x</div>').join('')+Array.from({length:dias},(_,i)=>{ const d=i+1,cls=occ.has(d)?'occupied':(d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear()?'today':''); return `<div class="cal-day ${cls}">${d}</div>`; }).join('');
+  const prox=S.bookings.filter(b=>{ const ci=new Date(b.checkin),df=(ci-now)/86400000; return df>=0&&df<=14&&b.status!=='Cancelada'; }).sort((a,b)=>new Date(a.checkin)-new Date(b.checkin));
+  document.getElementById('d-proximas').innerHTML=prox.length?prox.map(b=>`<div class="booking-item" onclick="switchTab('reservas',document.querySelectorAll('.navbtn')[1]);openBD(${S.bookings.indexOf(b)})"><div><div class="booking-name">${b.name}</div><div class="booking-dates">Check-in: ${fmt(b.checkin)}</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}">${b.status}</span></div></div>`).join(''):'<div class="empty-state">Sem chegadas nos próximos 14 dias</div>';
+}
+
+function renderReservas() {
+  const list=rFilter==='Todas'?S.bookings:rFilter==='Por pagar'?S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada'):S.bookings.filter(b=>b.status===rFilter);
+  const el=document.getElementById('reservas-container');
+  if(!list.length){el.innerHTML='<div class="empty-state">Sem reservas neste filtro.</div>';return;}
+  el.innerHTML=[...list].sort((a,b)=>new Date(b.checkin)-new Date(a.checkin)).map(b=>{ const ri=S.bookings.indexOf(b),pc=b.pagamento==='Pago'?'badge-pago':b.pagamento==='Parcial'?'badge-parcial':'badge-nao-pago'; return `<div class="booking-item" onclick="openBD(${ri})"><div><div class="booking-name">${b.name}</div><div class="booking-dates">${fmt(b.checkin)} – ${fmt(b.checkout)} · ${b.canal} · ${b.guests} hósp.</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><div class="badges"><span class="badge ${badgeMap[b.status]||''}">${b.status}</span><span class="badge ${pc}">${b.pagamento||'Não pago'}</span></div></div></div>`; }).join('');
+}
+
+function renderGastos() {
+  const list=gFilter==='Todos'?S.expenses:S.expenses.filter(e=>e.category===gFilter);
+  const now=new Date(),m=now.getMonth(),y=now.getFullYear();
+  const mE=S.expenses.filter(e=>{const d=new Date(e.date);return d.getMonth()===m&&d.getFullYear()===y;});
+  document.getElementById('g-total').textContent=euro(mE.reduce((s,e)=>s+parseFloat(e.amount||0),0));
+  document.getElementById('g-count').textContent=mE.length;
+  const el=document.getElementById('gastos-container');
+  if(!list.length){el.innerHTML='<div class="empty-state">Sem gastos neste filtro.</div>';return;}
+  el.innerHTML=[...list].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e=>`<div class="expense-item"><div><div style="font-size:14px;font-weight:600;color:#111">${e.desc||e.category}</div><div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}</div></div><div class="expense-amount">–${euro(e.amount)}</div></div>`).join('');
+}
+
+function renderHospedes() {
+  const q=(document.getElementById('search-input')||{value:''}).value.toLowerCase();
+  const list=S.guests.filter(g=>g.name.toLowerCase().includes(q));
+  const el=document.getElementById('hospedes-container');
+  if(!list.length){el.innerHTML='<div class="empty-state">Sem hóspedes ainda.</div>';return;}
+  el.innerHTML=list.map(g=>{ const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),nr=S.bookings.filter(b=>b.guestId===g.id).length; return `<div class="guest-item" onclick="openGD('${g.id}')"><div class="avatar">${ini}</div><div><div style="font-size:14px;font-weight:600;color:#111">${g.name}</div><div style="font-size:12px;color:#888;margin-top:2px">${g.email||g.phone||''} · ${nr} reserva${nr!==1?'s':''}</div></div></div>`; }).join('');
+}
+
+function openBD(i) {
+  curBookingIdx=i; const b=S.bookings[i];
+  document.getElementById('det-name').textContent=b.name;
+  document.getElementById('det-channel').textContent=b.canal+(b.reservaNum?' · Nº '+b.reservaNum:'');
+  document.getElementById('det-checkin').textContent=fmt(b.checkin);
+  document.getElementById('det-checkout').textContent=fmt(b.checkout);
+  document.getElementById('det-guests').textContent=b.guests+' hóspedes';
+  document.getElementById('det-price').textContent=euro(b.price);
+  document.getElementById('det-payment').textContent=b.payment;
+  const badge=document.getElementById('det-badge'); badge.textContent=b.status; badge.className='badge '+(badgeMap[b.status]||'');
+  const show=(id,val,el)=>{ document.getElementById(id).style.display=val?'flex':'none'; if(el&&val) document.getElementById(el).textContent=val; };
+  show('det-email-row',b.email,'det-email'); show('det-tel-row',b.phone,'det-tel'); show('det-reserva-row',b.reservaNum,'det-reserva');
+  if(b.comissao){ show('det-com-row',true); document.getElementById('det-com').textContent='–'+euro(b.comissao); show('det-liq-row',true); document.getElementById('det-liq').textContent=euro(parseFloat(b.price)-parseFloat(b.comissao)); }
+  else { document.getElementById('det-com-row').style.display='none'; document.getElementById('det-liq-row').style.display='none'; }
+  renderPag(b.pagamento||'Não pago');
+  document.getElementById('det-workflow').innerHTML=statuses.map(s=>`<button class="wf-btn${s===b.status?' active':''}" onclick="changeStatus(${i},'${s}',this)">${s}</button>`).join('')+'<button class="wf-btn cancel" onclick="changeStatus('+i+',\'Cancelada\',this)">Cancelar</button>';
+  const gRes=S.expenses.filter(e=>e.bookingId===b.id);
+  document.getElementById('det-gastos').innerHTML=gRes.length?gRes.map(e=>`<div class="expense-item"><div><div style="font-size:14px;font-weight:600">${e.desc||e.category}</div><div class="expense-cat">${e.category}${e.paidto?' · '+e.paidto:''}</div></div><div class="expense-amount">–${euro(e.amount)}</div></div>`).join(''):'<div style="font-size:13px;color:#888">Sem gastos associados.</div>';
+  document.getElementById('reservas-list').style.display='none';
+  document.getElementById('booking-detail').classList.add('open');
+}
+
+function closeBookingDetail() { document.getElementById('reservas-list').style.display='block'; document.getElementById('booking-detail').classList.remove('open'); }
+
+function renderPag(p) {
+  ['pag-nao','pag-parc','pag-pago'].forEach(id=>document.getElementById(id).className='pag-btn');
+  if(p==='Pago') document.getElementById('pag-pago').className='pag-btn active-pago';
+  else if(p==='Parcial') document.getElementById('pag-parc').className='pag-btn active-parcial';
+  else document.getElementById('pag-nao').className='pag-btn active-nao';
+}
+function setPagamento(v) { S.bookings[curBookingIdx].pagamento=v; renderPag(v); persist(); renderReservas(); renderDash(); }
+function changeStatus(i,s,btn) { S.bookings[i].status=s; document.querySelectorAll('#det-workflow .wf-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('det-badge').textContent=s; document.getElementById('det-badge').className='badge '+(badgeMap[s]||''); persist(); renderReservas(); renderDash(); }
+
+function openGD(gid) {
+  const g=S.guests.find(x=>x.id===gid); if(!g) return;
+  const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('gd-avatar').textContent=ini;
+  document.getElementById('gd-name').textContent=g.name;
+  document.getElementById('gd-nat').textContent=g.nationality||'';
+  document.getElementById('gd-email').textContent=g.email||'—';
+  document.getElementById('gd-phone').textContent=g.phone||'—';
+  const gr=S.bookings.filter(b=>b.guestId===gid);
+  document.getElementById('gd-nres').textContent=gr.length;
+  document.getElementById('gd-total').textContent=euro(gr.reduce((s,b)=>s+parseFloat(b.price||0),0));
+  document.getElementById('gd-hist').innerHTML=gr.length?gr.map(b=>`<div class="booking-item"><div><div class="booking-name">${fmt(b.checkin)} – ${fmt(b.checkout)}</div><div class="booking-dates">${b.canal} · ${b.guests} hósp.</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}">${b.status}</span></div></div>`).join(''):'<div style="font-size:13px;color:#888">Sem reservas.</div>';
+  document.getElementById('hospedes-list').style.display='none';
+  document.getElementById('guest-detail').classList.add('open');
+}
+function closeGuestDetail() { document.getElementById('hospedes-list').style.display='block'; document.getElementById('guest-detail').classList.remove('open'); }
+
+function switchTab(tab,btn) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  btn.classList.add('active'); curTab=tab;
+  document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes'}[tab];
+  document.getElementById('fab-btn').style.display=tab==='dashboard'?'none':'flex';
+  closeBookingDetail(); closeGuestDetail();
+}
+
+function openFab() {
+  if(curTab==='gastos'){ const sel=document.getElementById('g-reserva'); sel.innerHTML='<option value="">Nenhuma</option>'+S.bookings.filter(b=>b.status!=='Cancelada').map(b=>`<option value="${b.id}">${b.name} · ${fmt(b.checkin)}</option>`).join(''); document.getElementById('g-date').value=new Date().toISOString().split('T')[0]; openModal('m-gasto'); }
+  else openModal('m-choice');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if(id==='m-import'){ document.getElementById('imp1').style.display='block'; document.getElementById('imp2').style.display='none'; document.getElementById('imp3').style.display='none'; }
+}
+
+function startImport() {
+  document.getElementById('imp1').style.display='none'; document.getElementById('imp2').style.display='block';
+  const bar=document.getElementById('imp-bar'),msgs=['A identificar hóspede...','A extrair datas...','A calcular comissão...','Quase pronto...'];
+  let i=0,w=0; const iv=setInterval(()=>{ w+=26; bar.style.width=Math.min(w,100)+'%'; if(i<msgs.length) document.getElementById('imp-msg').textContent=msgs[i++]; if(w>=100){clearInterval(iv);setTimeout(()=>{document.getElementById('imp2').style.display='none';document.getElementById('imp3').style.display='block';},300);} },700);
+}
+
+function confirmImport() {
+  const gid=uid(),g={id:gid,name:'Holly Thompstone',email:'hthomp.609751@guest.booking.com',phone:'+44 7878 714176',nationality:'Reino Unido'};
+  S.guests.push(g);
+  S.bookings.push({id:uid(),guestId:gid,name:'Holly Thompstone',canal:'Booking.com',checkin:'2026-07-18',checkout:'2026-07-25',guests:'9',price:'5300',payment:'OTA',pagamento:'Não pago',status:'Pendente',email:g.email,phone:g.phone,reservaNum:'5883498564',comissao:'861.70'});
+  persist(); renderAll(); closeModal('m-import');
+}
+
+function saveReserva() {
+  const nome=document.getElementById('f-nome').value.trim(); if(!nome){alert('Por favor preenche o nome.');return;}
+  let g=S.guests.find(x=>x.name.toLowerCase()===nome.toLowerCase());
+  if(!g){g={id:uid(),name:nome,email:document.getElementById('f-email').value.trim(),phone:document.getElementById('f-tel').value.trim(),nationality:''}; S.guests.push(g);}
+  S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
+  ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price'].forEach(id=>document.getElementById(id).value='');
+  persist(); renderAll(); closeModal('m-reserva');
+}
+
+function saveGasto() {
+  const amt=document.getElementById('g-amount').value; if(!amt){alert('Por favor preenche o valor.');return;}
+  S.expenses.push({id:uid(),category:document.getElementById('g-cat').value,amount:amt,date:document.getElementById('g-date').value,desc:document.getElementById('g-desc').value,paidto:document.getElementById('g-paidto').value,bookingId:document.getElementById('g-reserva').value});
+  ['g-amount','g-desc','g-paidto'].forEach(id=>document.getElementById(id).value='');
+  persist(); renderAll(); closeModal('m-gasto');
+}
+
+function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); if(t==='r'){rFilter=v;renderReservas();}else{gFilter=v;renderGastos();} }
+
+if(SCRIPT_URL||LOCAL){ closeModal('m-setup'); loadData(); }
+</script>
+</body>
+</html>
