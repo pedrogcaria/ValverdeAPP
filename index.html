@@ -111,6 +111,61 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
 .comissao-key { font-size: 12px; color: #888; }
 .comissao-val { font-size: 12px; font-weight: 600; color: #111; }
 </style>
+
+<script>
+// Gera ícone PNG dinamicamente e cria manifest
+(function() {
+  const c = document.createElement('canvas');
+  c.width = 192; c.height = 192;
+  const ctx = c.getContext('2d');
+  // Fundo verde arredondado
+  const r = 40;
+  ctx.beginPath();
+  ctx.moveTo(r,0); ctx.lineTo(192-r,0); ctx.quadraticCurveTo(192,0,192,r);
+  ctx.lineTo(192,192-r); ctx.quadraticCurveTo(192,192,192-r,192);
+  ctx.lineTo(r,192); ctx.quadraticCurveTo(0,192,0,192-r);
+  ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0);
+  ctx.closePath();
+  ctx.fillStyle = '#0F6E56';
+  ctx.fill();
+  // Texto VV
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 100px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('VV', 96, 100);
+  const png = c.toDataURL('image/png');
+  // Apple touch icon
+  const link = document.createElement('link');
+  link.rel = 'apple-touch-icon';
+  link.href = png;
+  document.head.appendChild(link);
+  // Manifest com ícone PNG
+  const manifest = {
+    name: 'Valverde App',
+    short_name: 'Valverde',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#0F6E56',
+    theme_color: '#0F6E56',
+    icons: [
+      { src: png, sizes: '192x192', type: 'image/png' },
+      { src: png, sizes: '512x512', type: 'image/png' }
+    ]
+  };
+  const mBlob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const mUrl = URL.createObjectURL(mBlob);
+  const mLink = document.createElement('link');
+  mLink.rel = 'manifest';
+  mLink.href = mUrl;
+  document.head.appendChild(mLink);
+  // Topbar icon
+  document.addEventListener('DOMContentLoaded', function() {
+    const img = document.getElementById('topbar-icon');
+    if (img) img.src = png;
+  });
+})();
+</script>
 </head>
 <body>
 <div class="app" id="app">
@@ -119,7 +174,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
       <h1 id="topbar-title">Valverde</h1>
       <p id="topbar-sub"></p>
     </div>
-    <img src="icon.svg" style="width:36px;height:36px;border-radius:8px;" />
+    <img id="topbar-icon" src="icon.svg" style="width:36px;height:36px;border-radius:8px;" />
   </div>
   <div class="saving" id="saving">A guardar...</div>
 
