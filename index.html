@@ -228,12 +228,22 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
       <div class="card">
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
           <div class="avatar" style="width:50px;height:50px;font-size:17px;" id="gd-avatar"></div>
-          <div><div style="font-size:17px;font-weight:600;color:#111" id="gd-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="gd-nat"></div></div>
+          <div style="flex:1"><div style="font-size:17px;font-weight:600;color:#111" id="gd-name"></div><div style="font-size:12px;color:#888;margin-top:2px" id="gd-nat"></div></div>
+          <div style="display:flex;gap:8px;">
+            <button id="gd-edit-btn" onclick="" style="font-size:13px;padding:6px 12px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">✏️ Editar</button>
+            <button id="gd-del-btn" onclick="" style="font-size:13px;padding:6px 12px;border-radius:20px;border:0.5px solid #A32D2D;color:#A32D2D;background:none;cursor:pointer;">🗑</button>
+          </div>
         </div>
         <div class="detail-field"><span class="detail-key">Email</span><span class="detail-val" id="gd-email" style="color:#185FA5;font-size:12px;"></span></div>
         <div class="detail-field"><span class="detail-key">Telefone</span><span class="detail-val" id="gd-phone"></span></div>
+        <div class="detail-field"><span class="detail-key">Nacionalidade</span><span class="detail-val" id="gd-nat2"></span></div>
+        <div class="detail-field"><span class="detail-key">País de origem</span><span class="detail-val" id="gd-pais"></span></div>
         <div class="detail-field"><span class="detail-key">Reservas</span><span class="detail-val" id="gd-nres"></span></div>
         <div class="detail-field"><span class="detail-key">Total pago</span><span class="detail-val" style="color:#0F6E56" id="gd-total"></span></div>
+        <div id="gd-comments-row" style="display:none;padding:10px 0;border-top:0.5px solid rgba(0,0,0,0.06);">
+          <div style="font-size:12px;color:#888;margin-bottom:4px;">Comentários</div>
+          <div style="font-size:13px;color:#111;line-height:1.6;" id="gd-comments"></div>
+        </div>
       </div>
       <div class="card">
         <div class="section-title">Histórico</div>
@@ -333,8 +343,26 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="g-desc" placeholder="Ex: Limpeza após reserva Santos" /></div>
       <div class="form-group"><label class="form-label">Pago a</label><input type="text" id="g-paidto" placeholder="Nome do fornecedor" /></div>
       <div class="form-group"><label class="form-label">Associar a reserva (opcional)</label><select id="g-reserva"><option value="">Nenhuma</option></select></div>
-      <button class="btn-primary" onclick="saveGasto()">Guardar gasto</button>
+      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="g-pago"><option value="1">Pago</option><option value="0">Por pagar</option></select></div>
+      <button class="btn-primary" id="g-save-btn" onclick="saveGasto()">Guardar gasto</button>
       <button class="btn-secondary" onclick="closeModal('m-gasto')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR HÓSPEDE -->
+  <div class="modal-overlay" id="m-hospede">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2 id="hospede-modal-title">Editar hóspede</h2>
+      <input type="hidden" id="h-id" />
+      <div class="form-group"><label class="form-label">Nome *</label><input type="text" id="h-nome" placeholder="Nome completo" /></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" id="h-email" placeholder="email@exemplo.com" /></div>
+      <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="h-tel" placeholder="+351 9xx xxx xxx" /></div>
+      <div class="form-group"><label class="form-label">Nacionalidade</label><input type="text" id="h-nat" placeholder="Ex: Portuguesa" /></div>
+      <div class="form-group"><label class="form-label">País de origem</label><select id="h-pais"><option value="">Selecionar...</option><option>Portugal</option><option>Espanha</option><option>França</option><option>Reino Unido</option><option>Alemanha</option><option>Países Baixos</option><option>Bélgica</option><option>Itália</option><option>Brasil</option><option>EUA</option><option>Canadá</option><option>Austrália</option><option>Outro</option></select></div>
+      <div class="form-group"><label class="form-label">Comentários</label><textarea id="h-comments" rows="3" placeholder="Notas sobre o hóspede, preferências, histórico..." style="width:100%;padding:10px 12px;border:0.5px solid rgba(0,0,0,0.2);border-radius:10px;font-size:15px;background:#fff;color:#111;resize:vertical;"></textarea></div>
+      <button class="btn-primary" onclick="saveHospede()">Guardar</button>
+      <button class="btn-secondary" onclick="closeModal('m-hospede')">Cancelar</button>
     </div>
   </div>
 
@@ -452,7 +480,27 @@ function renderGastos() {
   document.getElementById('g-count').textContent=mE.length;
   const el=document.getElementById('gastos-container');
   if(!list.length){el.innerHTML='<div class="empty-state">Sem gastos neste filtro.</div>';return;}
-  el.innerHTML=[...list].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e=>`<div class="expense-item"><div><div style="font-size:14px;font-weight:600;color:#111">${e.desc||e.category}</div><div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}</div></div><div class="expense-amount">–${euro(e.amount)}</div></div>`).join('');
+  el.innerHTML=[...list].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((e,i)=>{
+  const ri = S.expenses.indexOf(e);
+  const pago = e.pago !== false;
+  const pagBadge = pago ? '<span class="badge badge-pago">Pago</span>' : '<span class="badge badge-nao-pago">Por pagar</span>';
+  return `<div class="expense-item">
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <div style="font-size:14px;font-weight:600;color:#111">${e.desc||e.category}</div>${pagBadge}
+      </div>
+      <div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px;">
+      <div class="expense-amount">–${euro(e.amount)}</div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="toggleGastoPago(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">${pago?'Por pagar':'Pago'}</button>
+        <button onclick="editGasto(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">✏️</button>
+        <button onclick="deleteGasto(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid #A32D2D;color:#A32D2D;background:none;cursor:pointer;">🗑</button>
+      </div>
+    </div>
+  </div>`;
+}).join('');
 }
 
 function renderHospedes() {
@@ -503,20 +551,66 @@ function renderPag(p) {
 function setPagamento(v) { S.bookings[curBookingIdx].pagamento=v; renderPag(v); persist(); renderReservas(); renderDash(); }
 function changeStatus(i,s,btn) { S.bookings[i].status=s; document.querySelectorAll('#det-workflow .wf-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('det-badge').textContent=s; document.getElementById('det-badge').className='badge '+(badgeMap[s]||''); persist(); renderReservas(); renderDash(); }
 
+let curGuestId = null;
 function openGD(gid) {
   const g=S.guests.find(x=>x.id===gid); if(!g) return;
+  curGuestId = gid;
   const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('gd-avatar').textContent=ini;
   document.getElementById('gd-name').textContent=g.name;
   document.getElementById('gd-nat').textContent=g.nationality||'';
   document.getElementById('gd-email').textContent=g.email||'—';
   document.getElementById('gd-phone').textContent=g.phone||'—';
+  document.getElementById('gd-nat2').textContent=g.nationality||'—';
+  document.getElementById('gd-pais').textContent=g.pais||'—';
+  const commEl=document.getElementById('gd-comments-row');
+  if(g.comments){commEl.style.display='block';document.getElementById('gd-comments').textContent=g.comments;}else{commEl.style.display='none';}
   const gr=S.bookings.filter(b=>b.guestId===gid);
   document.getElementById('gd-nres').textContent=gr.length;
   document.getElementById('gd-total').textContent=euro(gr.reduce((s,b)=>s+parseFloat(b.price||0),0));
   document.getElementById('gd-hist').innerHTML=gr.length?gr.map(b=>`<div class="booking-item"><div><div class="booking-name">${fmt(b.checkin)} – ${fmt(b.checkout)}</div><div class="booking-dates">${b.canal} · ${b.guests} hósp.</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}">${b.status}</span></div></div>`).join(''):'<div style="font-size:13px;color:#888">Sem reservas.</div>';
+  document.getElementById('gd-edit-btn').onclick = () => editHospede(gid);
+  document.getElementById('gd-del-btn').onclick = () => deleteHospede(gid);
   document.getElementById('hospedes-list').style.display='none';
   document.getElementById('guest-detail').classList.add('open');
+}
+
+function editHospede(gid) {
+  const g = S.guests.find(x=>x.id===gid); if(!g) return;
+  document.getElementById('h-id').value = gid;
+  document.getElementById('h-nome').value = g.name||'';
+  document.getElementById('h-email').value = g.email||'';
+  document.getElementById('h-tel').value = g.phone||'';
+  document.getElementById('h-nat').value = g.nationality||'';
+  document.getElementById('h-pais').value = g.pais||'';
+  document.getElementById('h-comments').value = g.comments||'';
+  openModal('m-hospede');
+}
+
+function saveHospede() {
+  const nome = document.getElementById('h-nome').value.trim();
+  if (!nome) { alert('Por favor preenche o nome.'); return; }
+  const gid = document.getElementById('h-id').value;
+  const idx = S.guests.findIndex(x=>x.id===gid);
+  if (idx >= 0) {
+    S.guests[idx].name = nome;
+    S.guests[idx].email = document.getElementById('h-email').value.trim();
+    S.guests[idx].phone = document.getElementById('h-tel').value.trim();
+    S.guests[idx].nationality = document.getElementById('h-nat').value.trim();
+    S.guests[idx].pais = document.getElementById('h-pais').value;
+    S.guests[idx].comments = document.getElementById('h-comments').value.trim();
+    S.bookings.forEach(b => { if(b.guestId===gid) b.name = nome; });
+  }
+  persist(); renderAll(); closeModal('m-hospede'); openGD(gid);
+}
+
+function deleteHospede(gid) {
+  const g = S.guests.find(x=>x.id===gid);
+  const hasBookings = S.bookings.some(b=>b.guestId===gid);
+  if (hasBookings) { alert('Não é possível apagar — este hóspede tem reservas associadas.'); return; }
+  if (!confirm('Apagar hóspede "'+ g.name +'"?')) return;
+  S.guests = S.guests.filter(x=>x.id!==gid);
+  persist(); renderAll(); closeGuestDetail();
 }
 function closeGuestDetail() { document.getElementById('hospedes-list').style.display='block'; document.getElementById('guest-detail').classList.remove('open'); }
 
@@ -603,17 +697,58 @@ function confirmImport() {
 function saveReserva() {
   const nome=document.getElementById('f-nome').value.trim(); if(!nome){alert('Por favor preenche o nome.');return;}
   let g=S.guests.find(x=>x.name.toLowerCase()===nome.toLowerCase());
-  if(!g){g={id:uid(),name:nome,email:document.getElementById('f-email').value.trim(),phone:document.getElementById('f-tel').value.trim(),nationality:''}; S.guests.push(g);}
+  if(!g){g={id:uid(),name:nome,email:document.getElementById('f-email').value.trim(),phone:document.getElementById('f-tel').value.trim(),nationality:'',pais:'',comments:''}; S.guests.push(g);}
   S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
   ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price'].forEach(id=>document.getElementById(id).value='');
   persist(); renderAll(); closeModal('m-reserva');
 }
 
+let editGastoIdx = null;
 function saveGasto() {
   const amt=document.getElementById('g-amount').value; if(!amt){alert('Por favor preenche o valor.');return;}
-  S.expenses.push({id:uid(),category:document.getElementById('g-cat').value,amount:amt,date:document.getElementById('g-date').value,desc:document.getElementById('g-desc').value,paidto:document.getElementById('g-paidto').value,bookingId:document.getElementById('g-reserva').value});
+  const obj = {
+    id: editGastoIdx !== null ? S.expenses[editGastoIdx].id : uid(),
+    category:document.getElementById('g-cat').value,
+    amount:amt,
+    date:document.getElementById('g-date').value,
+    desc:document.getElementById('g-desc').value,
+    paidto:document.getElementById('g-paidto').value,
+    bookingId:document.getElementById('g-reserva').value,
+    pago: document.getElementById('g-pago').value === '1'
+  };
+  if (editGastoIdx !== null) { S.expenses[editGastoIdx] = obj; editGastoIdx = null; }
+  else S.expenses.push(obj);
   ['g-amount','g-desc','g-paidto'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-save-btn').textContent = 'Guardar gasto';
   persist(); renderAll(); closeModal('m-gasto');
+}
+
+function editGasto(i) {
+  const e = S.expenses[i];
+  editGastoIdx = i;
+  const sel=document.getElementById('g-reserva');
+  sel.innerHTML='<option value="">Nenhuma</option>'+S.bookings.filter(b=>b.status!=='Cancelada').map(b=>`<option value="${b.id}">${b.name} · ${fmt(b.checkin)}</option>`).join('');
+  document.getElementById('g-cat').value = e.category;
+  document.getElementById('g-amount').value = e.amount;
+  document.getElementById('g-date').value = e.date;
+  document.getElementById('g-desc').value = e.desc||'';
+  document.getElementById('g-paidto').value = e.paidto||'';
+  document.getElementById('g-reserva').value = e.bookingId||'';
+  document.getElementById('g-pago').value = e.pago !== false ? '1' : '0';
+  document.getElementById('g-save-btn').textContent = 'Actualizar gasto';
+  openModal('m-gasto');
+}
+
+function deleteGasto(i) {
+  const e = S.expenses[i];
+  if (!confirm('Apagar gasto "' + (e.desc||e.category) + '"?')) return;
+  S.expenses.splice(i, 1);
+  persist(); renderAll();
+}
+
+function toggleGastoPago(i) {
+  S.expenses[i].pago = S.expenses[i].pago === false ? true : false;
+  persist(); renderAll();
 }
 
 function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); if(t==='r'){rFilter=v;renderReservas();}else{gFilter=v;renderGastos();} }
