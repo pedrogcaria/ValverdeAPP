@@ -157,6 +157,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
         <div class="filter-chip" onclick="filterChip(this,'r','Check-in feito')">Em estadia</div>
         <div class="filter-chip" onclick="filterChip(this,'r','Check-out feito')">Concluídas</div>
         <div class="filter-chip" onclick="filterChip(this,'r','Por pagar')">Por pagar</div>
+        <div class="filter-chip" onclick="filterChip(this,'r','Passadas')">Passadas</div>
       </div>
       <div class="card" id="reservas-container"><div class="empty-state">Sem reservas. Toca em + para adicionar.</div></div>
     </div>
@@ -287,18 +288,25 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
         <button class="btn-import" onclick="document.getElementById('photo-input').click()">&#128247; Abrir câmara / galeria</button>
         <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
       </div>
-      <div id="imp2" style="display:none">
-        <div style="font-size:13px;color:#888;margin-bottom:8px;">A analisar com IA...</div>
-        <div class="loading-bar"><div class="loading-bar-inner" id="imp-bar"></div></div>
-        <div style="font-size:12px;color:#888" id="imp-msg">A identificar hóspede...</div>
-      </div>
-      <div id="imp3" style="display:none">
-        <div class="success-banner"><span>&#10003; Dados extraídos com sucesso</span></div>
-        <div class="card" style="margin-bottom:12px;">
-          <div class="section-title">Dados extraídos</div>
-          <div id="imp3-fields"></div>
+      <div id="imp4" style="display:none">
+        <div style="margin-bottom:12px;border-radius:10px;overflow:hidden;"><img id="imp-photo-preview" style="width:100%;border-radius:10px;" /></div>
+        <div class="info-banner"><p>Vê a foto e preenche os dados abaixo com a informação da reserva.</p></div>
+        <div class="form-group"><label class="form-label">Nome do hóspede *</label><input type="text" id="imp-nome" placeholder="Nome completo" /></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="text" id="imp-email" placeholder="email@guest.booking.com" /></div>
+        <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="imp-tel" placeholder="+44 ..." /></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Check-in *</label><input type="date" id="imp-checkin" /></div>
+          <div class="form-group"><label class="form-label">Check-out *</label><input type="date" id="imp-checkout" /></div>
         </div>
-        <button class="btn-primary" onclick="confirmImport()">&#10003; Criar reserva e hóspede</button>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nº hóspedes</label><input type="number" id="imp-guests" value="2" min="1" /></div>
+          <div class="form-group"><label class="form-label">Preço total (€)</label><input type="number" id="imp-price" placeholder="0" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Comissão (€)</label><input type="number" id="imp-comissao" placeholder="0" /></div>
+          <div class="form-group"><label class="form-label">Nº reserva</label><input type="text" id="imp-reservanum" placeholder="ex: 5883498564" /></div>
+        </div>
+        <button class="btn-primary" onclick="confirmImportManual()">&#10003; Criar reserva e hóspede</button>
         <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
       </div>
     </div>
@@ -466,7 +474,8 @@ function renderDash() {
 }
 
 function renderReservas() {
-  const list=rFilter==='Todas'?S.bookings:rFilter==='Por pagar'?S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada'):S.bookings.filter(b=>b.status===rFilter);
+  const now2=new Date();
+const list=rFilter==='Todas'?S.bookings:rFilter==='Por pagar'?S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada'):rFilter==='Passadas'?S.bookings.filter(b=>b.checkout&&new Date(b.checkout)<now2):S.bookings.filter(b=>b.status===rFilter);
   const el=document.getElementById('reservas-container');
   if(!list.length){el.innerHTML='<div class="empty-state">Sem reservas neste filtro.</div>';return;}
   el.innerHTML=[...list].sort((a,b)=>new Date(b.checkin)-new Date(a.checkin)).map(b=>{ const ri=S.bookings.indexOf(b),pc=b.pagamento==='Pago'?'badge-pago':b.pagamento==='Parcial'?'badge-parcial':'badge-nao-pago'; return `<div class="booking-item" onclick="openBD(${ri})"><div><div class="booking-name">${b.name}</div><div class="booking-dates">${fmt(b.checkin)} – ${fmt(b.checkout)} · ${b.canal} · ${b.guests} hósp.</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><div class="badges"><span class="badge ${badgeMap[b.status]||''}">${b.status}</span><span class="badge ${pc}">${b.pagamento||'Não pago'}</span></div></div></div>`; }).join('');
@@ -632,7 +641,7 @@ function openFab() {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
-  if(id==='m-import'){ document.getElementById('imp1').style.display='block'; document.getElementById('imp2').style.display='none'; document.getElementById('imp3').style.display='none'; }
+  if(id==='m-import'){ document.getElementById('imp1').style.display='block'; document.getElementById('imp4').style.display='none'; }
 }
 
 let importedData = null;
@@ -641,36 +650,11 @@ function handlePhoto(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   const reader = new FileReader();
-  reader.onload = async function(e) {
-    const base64 = e.target.result.split(',')[1];
+  reader.onload = function(e) {
+    // Show the photo preview and manual fill form
     document.getElementById('imp1').style.display='none';
-    document.getElementById('imp2').style.display='block';
-    const bar=document.getElementById('imp-bar'), msgEl=document.getElementById('imp-msg');
-    const msgs=['A identificar hóspede...','A extrair datas...','A calcular comissão...','A verificar dados...'];
-    let i=0, w=0;
-    const iv=setInterval(()=>{ w+=12; bar.style.width=Math.min(w,80)+'%'; if(i<msgs.length) msgEl.textContent=msgs[i++]; },900);
-    try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514', max_tokens:1000,
-          messages:[{ role:'user', content:[
-            { type:'image', source:{ type:'base64', media_type:file.type, data:base64 }},
-            { type:'text', text:'Esta é uma página de reserva do Booking.com. Extrai em JSON puro (sem markdown): name, nationality, email, phone, checkin (YYYY-MM-DD), checkout (YYYY-MM-DD), guests (número total), price (número), comissao (número se existir), reservaNum, notes. Campos ausentes usa null.' }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      clearInterval(iv); bar.style.width='100%';
-      importedData = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-      setTimeout(()=>{ document.getElementById('imp2').style.display='none'; renderExtracted(importedData); document.getElementById('imp3').style.display='block'; },400);
-    } catch(err) {
-      clearInterval(iv);
-      alert('Erro ao analisar. Tenta de novo ou cria manualmente.');
-      document.getElementById('imp2').style.display='none';
-      document.getElementById('imp1').style.display='block';
-    }
+    document.getElementById('imp-photo-preview').src = e.target.result;
+    document.getElementById('imp4').style.display='block';
   };
   reader.readAsDataURL(file);
 }
