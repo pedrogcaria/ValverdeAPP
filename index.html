@@ -118,7 +118,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
   <div class="topbar">
     <div>
       <h1 id="topbar-title">Valverde</h1>
-      <p id="topbar-sub"></p>
+      <p id="topbar-sub" style="font-size:11px;color:#aaa;">v1.1 · 2 Abril 2025</p>
     </div>
     <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
     <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
@@ -294,7 +294,7 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
       </div>
       <div id="imp4" style="display:none">
         <div style="margin-bottom:12px;border-radius:10px;overflow:hidden;"><img id="imp-photo-preview" style="width:100%;border-radius:10px;" /></div>
-        <div class="info-banner"><p>Vê a foto e preenche os dados abaixo com a informação da reserva.</p></div>
+        <div id="imp-auto-status" style="display:none;font-size:13px;font-weight:500;padding:10px 14px;background:#EBF4FF;border-radius:10px;margin-bottom:12px;color:#185FA5;"></div>
         <div class="form-group"><label class="form-label">Nome do hóspede *</label><input type="text" id="imp-nome" placeholder="Nome completo" /></div>
         <div class="form-group"><label class="form-label">Email</label><input type="text" id="imp-email" placeholder="email@guest.booking.com" /></div>
         <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="imp-tel" placeholder="+44 ..." /></div>
@@ -399,8 +399,8 @@ body { background: #f5f5f0; min-height: 100vh; display: flex; justify-content: c
 
 <script>
 const SHEET_ID = '18bBC0KYR1xb3Th7Xnf0d7BIQ3aAiwfB4';
-let SCRIPT_URL = localStorage.getItem('vv_script') || '';
-let LOCAL = localStorage.getItem('vv_local') === '1';
+let SCRIPT_URL = localStorage.getItem('vv_script') || 'https://script.google.com/macros/s/AKfycbzfYuRVKhOIq7DmwFhiO0P0FT_ENei46K6R3aYVouF1rkY4s7PNkAzR4k7ZIHyweHeF/exec';
+let LOCAL = SCRIPT_URL ? false : localStorage.getItem('vv_local') === '1';
 let S = { bookings: [], expenses: [], guests: [] };
 let curTab = 'dashboard', curBookingIdx = null, rFilter = 'Todas', gFilter = 'Todos';
 const badgeMap = { 'Pendente':'badge-pending','Confirmada':'badge-confirmed','Check-in feito':'badge-checkin','Check-out feito':'badge-checkout','Cancelada':'badge-cancelled' };
@@ -633,6 +633,7 @@ function switchTab(tab,btn) {
   document.getElementById('screen-'+tab).classList.add('active');
   btn.classList.add('active'); curTab=tab;
   document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes'}[tab];
+  document.getElementById('topbar-sub').textContent = tab==='dashboard' ? 'v1.1 · 2 Abril 2025' : '';
   document.getElementById('fab-btn').style.display=tab==='dashboard'?'none':'flex';
   closeBookingDetail(); closeGuestDetail();
 }
@@ -654,11 +655,45 @@ function handlePhoto(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   const reader = new FileReader();
-  reader.onload = function(e) {
-    // Show the photo preview and manual fill form
+  reader.onload = async function(e) {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+    // Show photo preview
     document.getElementById('imp1').style.display='none';
-    document.getElementById('imp-photo-preview').src = e.target.result;
+    document.getElementById('imp-photo-preview').src = dataUrl;
     document.getElementById('imp4').style.display='block';
+    // Show loading state
+    document.getElementById('imp-auto-status').style.display='block';
+    document.getElementById('imp-auto-status').textContent='A analisar foto com IA...';
+    // Clear fields
+    ['imp-nome','imp-email','imp-tel','imp-checkin','imp-checkout','imp-price','imp-comissao','imp-reservanum'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = id === 'imp-guests' ? '2' : '';
+    });
+    try {
+      const resp = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'analyzePhoto', imageData: base64, mediaType: mediaType })
+      });
+      const text = await resp.text();
+      const d = JSON.parse(text.replace(/```json|```/g,'').trim());
+      // Fill form fields automatically
+      if (d.name) document.getElementById('imp-nome').value = d.name;
+      if (d.email) document.getElementById('imp-email').value = d.email;
+      if (d.phone) document.getElementById('imp-tel').value = d.phone;
+      if (d.checkin) document.getElementById('imp-checkin').value = d.checkin;
+      if (d.checkout) document.getElementById('imp-checkout').value = d.checkout;
+      if (d.guests) document.getElementById('imp-guests').value = d.guests;
+      if (d.price) document.getElementById('imp-price').value = d.price;
+      if (d.comissao) document.getElementById('imp-comissao').value = d.comissao;
+      if (d.reservaNum) document.getElementById('imp-reservanum').value = d.reservaNum;
+      document.getElementById('imp-auto-status').textContent = '✓ Dados preenchidos automaticamente — confirma e corrige se necessário';
+      document.getElementById('imp-auto-status').style.color = '#0F6E56';
+    } catch(err) {
+      document.getElementById('imp-auto-status').textContent = 'Não foi possível analisar automaticamente — preenche manualmente.';
+      document.getElementById('imp-auto-status').style.color = '#A32D2D';
+    }
   };
   reader.readAsDataURL(file);
 }
