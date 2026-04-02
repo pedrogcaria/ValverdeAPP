@@ -16,7 +16,7 @@ body { background: #f5f5f0; }
 .topbar h1 { font-size: 20px; font-weight: 600; color: #111; }
 .topbar p { font-size: 12px; color: #888; margin-top: 2px; }
 .logo-badge { background: #185FA5; color: #fff; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 20px; letter-spacing: 0.03em; }
-.screen { padding: 16px 16px 90px; display: none; }
+.screen { padding: 16px 16px 90px; display: none; min-height: 0; }
 .screen.active { display: block; }
 .bottomnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 0.5px solid rgba(0,0,0,0.1); display: flex; height: 68px; padding-bottom: env(safe-area-inset-bottom); z-index: 10; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 .navbtn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: none; font-size: 10px; color: #999; padding: 0; }
@@ -128,7 +128,6 @@ body { background: #f5f5f0; }
       </div>
     </div>
   </div>
-  <div class="saving" id="saving">A guardar...</div>
 
   <!-- DASHBOARD -->
   <div class="screen active" id="screen-dashboard">
@@ -258,6 +257,7 @@ body { background: #f5f5f0; }
     </div>
   </div>
 
+  <div class="saving" id="saving">A guardar...</div>
   <div class="bottomnav">
     <button class="navbtn active" onclick="switchTab('dashboard',this)"><span class="navicon">&#9636;</span><span>Dashboard</span></button>
     <button class="navbtn" onclick="switchTab('reservas',this)"><span class="navicon">&#128197;</span><span>Reservas</span></button>
