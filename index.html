@@ -754,6 +754,16 @@ function renderExtracted(d) {
   document.getElementById('imp3-fields').innerHTML=fields.map(f=>`<div class="extracted-field"><span class="extracted-key">${f[0]}</span><span class="extracted-val">${f[1]}</span></div>`).join('');
 }
 
+function confirmImportManual() {
+  const nome = document.getElementById('imp-nome').value.trim();
+  if (!nome) { alert('Por favor preenche o nome do hóspede.'); return; }
+  const gid = uid();
+  const g = { id:gid, name:nome, email:document.getElementById('imp-email').value.trim(), phone:document.getElementById('imp-tel').value.trim(), nationality:'', pais:'', comments:'' };
+  S.guests.push(g);
+  S.bookings.push({ id:uid(), guestId:gid, name:nome, canal:'Booking.com', checkin:document.getElementById('imp-checkin').value, checkout:document.getElementById('imp-checkout').value, guests:document.getElementById('imp-guests').value, price:document.getElementById('imp-price').value, payment:'OTA', pagamento:'Não pago', status:'Pendente', email:g.email, phone:g.phone, reservaNum:document.getElementById('imp-reservanum').value, comissao:document.getElementById('imp-comissao').value });
+  persist(); renderAll(); closeModal('m-import');
+}
+
 function confirmImport() {
   const d=importedData||{};
   const gid=uid(), g={id:gid,name:d.name||'Hóspede',email:d.email||'',phone:d.phone||'',nationality:d.nationality||''};
