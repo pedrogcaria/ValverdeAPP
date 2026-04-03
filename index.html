@@ -664,14 +664,31 @@ function closeModal(id) {
 
 let importedData = null;
 
+function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
 function handlePhoto(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   const reader = new FileReader();
   reader.onload = async function(e) {
     const dataUrl = e.target.result;
-    const base64 = dataUrl.split(',')[1];
-    const mediaType = file.type || 'image/jpeg';
+    // Compress image before sending
+    const compressed = await compressImage(dataUrl, 1200, 0.85);
+    const base64 = compressed.split(',')[1];
+    const mediaType = 'image/jpeg';
     // Show photo preview
     document.getElementById('imp1').style.display='none';
     document.getElementById('imp-photo-preview').src = dataUrl;
