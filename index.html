@@ -284,16 +284,16 @@ body { background: #f5f5f0; }
       <div class="modal-handle"></div>
       <h2>Importar do Booking.com</h2>
       <div id="imp1">
+        <input type="file" id="file-camera" accept="image/*" capture="camera" style="display:none" />
+        <input type="file" id="file-gallery" accept="image/*" style="display:none" />
         <div style="margin-bottom:16px;">
           <div style="font-size:14px;color:#555;margin-bottom:12px;">Escolhe como queres importar:</div>
-          <label style="display:block;width:100%;padding:14px;background:#EBF4FF;color:#185FA5;border:1.5px solid #185FA5;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px;">
+          <button onclick="document.getElementById('file-camera').click()" style="display:block;width:100%;padding:14px;background:#EBF4FF;color:#185FA5;border:1.5px solid #185FA5;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px;">
             &#128247; Câmara (tirar foto agora)
-            <input type="file" accept="image/*" capture="camera" style="display:none" onchange="handlePhoto(this)" />
-          </label>
-          <label style="display:block;width:100%;padding:14px;background:#f5f5f0;color:#333;border:0.5px solid rgba(0,0,0,0.2);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px;">
+          </button>
+          <button onclick="document.getElementById('file-gallery').click()" style="display:block;width:100%;padding:14px;background:#f5f5f0;color:#333;border:0.5px solid rgba(0,0,0,0.2);border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px;">
             &#128444; Galeria (escolher foto)
-            <input type="file" accept="image/*" style="display:none" onchange="handlePhoto(this)" />
-          </label>
+          </button>
         </div>
         <button class="btn-secondary" onclick="closeModal('m-import')">Cancelar</button>
       </div>
@@ -690,7 +690,14 @@ function handlePhoto(input) {
         body: JSON.stringify({ action: 'analyzePhoto', imageData: base64, mediaType: mediaType })
       });
       const text = await resp.text();
-      const d = JSON.parse(text.replace(/```json|```/g,'').trim());
+      console.log('Apps Script response:', text);
+      let d;
+      try {
+        d = JSON.parse(text.replace(/```json|```/g,'').trim());
+      } catch(parseErr) {
+        console.log('Parse error:', parseErr, 'Raw text:', text);
+        throw parseErr;
+      }
       // Fill form fields automatically
       if (d.name) document.getElementById('imp-nome').value = d.name;
       if (d.email) document.getElementById('imp-email').value = d.email;
@@ -701,8 +708,16 @@ function handlePhoto(input) {
       if (d.price) document.getElementById('imp-price').value = d.price;
       if (d.comissao) document.getElementById('imp-comissao').value = d.comissao;
       if (d.reservaNum) document.getElementById('imp-reservanum').value = d.reservaNum;
-      document.getElementById('imp-auto-status').textContent = '✓ Dados preenchidos automaticamente — confirma e corrige se necessário';
-      document.getElementById('imp-auto-status').style.color = '#0F6E56';
+      const filled = [d.name, d.checkin, d.checkout, d.price].filter(Boolean).length;
+      if (filled >= 2) {
+        document.getElementById('imp-auto-status').textContent = '✓ Dados preenchidos automaticamente — confirma e corrige se necessário';
+        document.getElementById('imp-auto-status').style.color = '#0F6E56';
+        document.getElementById('imp-auto-status').style.background = '#EAF3DE';
+      } else {
+        document.getElementById('imp-auto-status').textContent = 'Foto incompleta — a parte com nome, datas e preço não estava visível. Preenche manualmente ou tira nova foto da parte de cima da reserva.';
+        document.getElementById('imp-auto-status').style.color = '#A32D2D';
+        document.getElementById('imp-auto-status').style.background = '#FCEBEB';
+      }
     } catch(err) {
       document.getElementById('imp-auto-status').textContent = 'Não foi possível analisar automaticamente — preenche manualmente.';
       document.getElementById('imp-auto-status').style.color = '#A32D2D';
@@ -789,7 +804,11 @@ function toggleGastoPago(i) {
 
 function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); if(t==='r'){rFilter=v;renderReservas();}else{gFilter=v;renderGastos();} }
 
-document.addEventListener('DOMContentLoaded', function() { loadData(); });
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+  document.getElementById('file-camera').addEventListener('change', function() { handlePhoto(this); });
+  document.getElementById('file-gallery').addEventListener('change', function() { handlePhoto(this); });
+});
 </script>
 </body>
 </html>
