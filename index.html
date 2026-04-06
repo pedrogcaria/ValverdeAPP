@@ -124,7 +124,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v1.3 · 03/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v1.5 · 04/04</span>
       </div>
     </div>
   </div>
@@ -138,12 +138,25 @@ body { background: #f5f5f0; }
       <div class="metric"><div class="metric-label">Por receber</div><div class="metric-value" style="color:#BA7517" id="d-porreceber">0 €</div></div>
     </div>
     <div class="card">
-      <div class="section-title" id="cal-title">Este mês</div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-        <div style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;"></div>
-        <span style="font-size:11px;color:#888;">Ocupado</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <button onclick="calNav(-1)" style="background:none;border:none;cursor:pointer;font-size:20px;color:#185FA5;padding:0 8px;">&#8249;</button>
+        <div style="font-size:13px;font-weight:600;color:#111;" id="cal-title">Este mês</div>
+        <button onclick="calNav(1)" style="background:none;border:none;cursor:pointer;font-size:20px;color:#185FA5;padding:0 8px;">&#8250;</button>
       </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#B5D4F4;"></div><span style="font-size:10px;color:#888;">Reserva</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#F0997B;"></div><span style="font-size:10px;color:#888;">Gasto</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#9FE1CB;"></div><span style="font-size:10px;color:#888;">Ambos</span></div>
+      </div>
+    </div>
+    <!-- CALENDAR DETAIL PANEL -->
+    <div class="card" id="cal-detail" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:600;color:#111;" id="cal-detail-title"></div>
+        <button onclick="document.getElementById('cal-detail').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#888;">&#10005;</button>
+      </div>
+      <div id="cal-detail-content"></div>
     </div>
     <div class="card">
       <div class="section-title">Próximas chegadas</div>
@@ -468,6 +481,98 @@ async function persist() {
 
 function renderAll() { renderDash(); renderReservas(); renderGastos(); renderHospedes(); }
 
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+
+function calNav(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-title').textContent = meses[calMonth]+' '+calYear;
+  renderCalGrid();
+}
+
+function renderCalGrid() {
+  const m = calMonth, y = calYear;
+  const now = new Date();
+  const dias = new Date(y,m+1,0).getDate();
+  const prim = new Date(y,m,1).getDay();
+  const off = prim===0?6:prim-1;
+  
+  // Build occupied days map with type: booking, expense, both
+  const dayMap = {};
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b=>{
+    const ci=new Date(b.checkin), co=new Date(b.checkout);
+    for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)){
+      if(d.getMonth()===m&&d.getFullYear()===y){
+        const day=d.getDate();
+        dayMap[day] = dayMap[day]==='expense'?'both':'booking';
+      }
+    }
+  });
+  S.expenses.forEach(e=>{
+    if(!e.date) return;
+    const d=new Date(e.date);
+    if(d.getMonth()===m&&d.getFullYear()===y){
+      const day=d.getDate();
+      dayMap[day] = dayMap[day]==='booking'?'both':'expense';
+    }
+  });
+
+  const colorMap = { booking:'#B5D4F4', expense:'#F0997B', both:'#9FE1CB' };
+  const dw=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  document.getElementById('cal-grid').innerHTML = 
+    dw.map(d=>`<div class="cal-header">${d}</div>`).join('') +
+    Array(off).fill('<div class="cal-day empty">x</div>').join('') +
+    Array.from({length:dias},(_,i)=>{
+      const d=i+1;
+      const isToday = d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear();
+      const type = dayMap[d];
+      const bg = type ? `background:${colorMap[type]};` : '';
+      const todayCss = isToday ? 'outline:2px solid #185FA5;outline-offset:-1px;border-radius:5px;' : '';
+      return `<div class="cal-day" style="${bg}${todayCss}font-weight:${isToday?'700':'400'};cursor:${type?'pointer':'default'}" onclick="showCalDetail(${d})">${d}</div>`;
+    }).join('');
+}
+
+function showCalDetail(day) {
+  const m=calMonth, y=calYear;
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+  
+  const bookingsDay = S.bookings.filter(b=>{
+    if(b.status==='Cancelada') return false;
+    const ci=new Date(b.checkin), co=new Date(b.checkout), dt=new Date(dateStr);
+    return dt>=ci && dt<co;
+  });
+  const expensesDay = S.expenses.filter(e=>e.date===dateStr);
+  
+  if(!bookingsDay.length && !expensesDay.length) return;
+  
+  document.getElementById('cal-detail-title').textContent = day+' de '+meses[m]+' '+y;
+  let html = '';
+  if(bookingsDay.length) {
+    html += '<div style="font-size:11px;font-weight:600;color:#0C447C;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Reservas</div>';
+    html += bookingsDay.map(b=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <div><div style="font-size:13px;font-weight:600;">${b.name}</div><div style="font-size:11px;color:#888;">${fmt(b.checkin)} – ${fmt(b.checkout)}</div></div>
+        <div style="text-align:right;"><div style="font-size:13px;font-weight:600;">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}" style="margin-top:2px;">${b.status}</span></div>
+      </div>`).join('');
+  }
+  if(expensesDay.length) {
+    if(bookingsDay.length) html += '<div style="margin-top:10px;"></div>';
+    html += '<div style="font-size:11px;font-weight:600;color:#993C1D;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Gastos</div>';
+    html += expensesDay.map(e=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <div><div style="font-size:13px;font-weight:600;">${e.desc||e.category}</div><div style="font-size:11px;color:#888;">${e.category}${e.paidto?' · '+e.paidto:''}</div></div>
+        <div style="font-size:13px;font-weight:600;color:#A32D2D;">–${euro(e.amount)}</div>
+      </div>`).join('');
+  }
+  document.getElementById('cal-detail-content').innerHTML = html;
+  document.getElementById('cal-detail').style.display = 'block';
+  document.getElementById('cal-detail').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
 function renderDash() {
   const now=new Date(), m=now.getMonth(), y=now.getFullYear();
   const mB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getMonth()===m&&d.getFullYear()===y&&b.status!=='Cancelada'; });
@@ -480,12 +585,8 @@ function renderDash() {
   document.getElementById('d-lucro').textContent=euro(rec-gas);
   document.getElementById('d-porreceber').textContent=euro(por);
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  document.getElementById('cal-title').textContent=meses[m]+' '+y;
-  const dias=new Date(y,m+1,0).getDate(), prim=new Date(y,m,1).getDay(), off=prim===0?6:prim-1;
-  const occ=new Set();
-  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b=>{ const ci=new Date(b.checkin),co=new Date(b.checkout); for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)){ if(d.getMonth()===m&&d.getFullYear()===y) occ.add(d.getDate()); } });
-  const dw=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-  document.getElementById('cal-grid').innerHTML=dw.map(d=>`<div class="cal-header">${d}</div>`).join('')+Array(off).fill('<div class="cal-day empty">x</div>').join('')+Array.from({length:dias},(_,i)=>{ const d=i+1,cls=occ.has(d)?'occupied':(d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear()?'today':''); return `<div class="cal-day ${cls}">${d}</div>`; }).join('');
+  document.getElementById('cal-title').textContent=meses[calMonth]+' '+calYear;
+  renderCalGrid();
   const prox=S.bookings.filter(b=>{ const ci=new Date(b.checkin),df=(ci-now)/86400000; return df>=0&&df<=14&&b.status!=='Cancelada'; }).sort((a,b)=>new Date(a.checkin)-new Date(b.checkin));
   document.getElementById('d-proximas').innerHTML=prox.length?prox.map(b=>`<div class="booking-item" onclick="switchTab('reservas',document.querySelectorAll('.navbtn')[1]);openBD(${S.bookings.indexOf(b)})"><div><div class="booking-name">${b.name}</div><div class="booking-dates">Check-in: ${fmt(b.checkin)}</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}">${b.status}</span></div></div>`).join(''):'<div class="empty-state">Sem chegadas nos próximos 14 dias</div>';
 }
@@ -764,6 +865,46 @@ function confirmImportManual() {
   persist(); renderAll(); closeModal('m-import');
 }
 
+function confirmImportManual() {
+  const nome = document.getElementById('imp-nome').value.trim();
+  if (!nome) { alert('Por favor preenche o nome do hóspede.'); return; }
+  const tel = document.getElementById('imp-tel').value.trim();
+  const email = document.getElementById('imp-email').value.trim();
+  
+  // Check for duplicate by phone (primary) or email
+  let g = null;
+  if (tel) g = S.guests.find(x => x.phone && x.phone.replace(/\s/g,'') === tel.replace(/\s/g,''));
+  if (!g && email) g = S.guests.find(x => x.email && x.email.toLowerCase() === email.toLowerCase());
+  
+  if (g) {
+    // Update existing guest info
+    g.name = nome;
+    if (tel) g.phone = tel;
+    if (email) g.email = email;
+  } else {
+    // Create new guest
+    g = { id: uid(), name: nome, email: email, phone: tel, nationality: '', pais: '', comments: '' };
+    S.guests.push(g);
+  }
+  
+  S.bookings.push({
+    id: uid(), guestId: g.id, name: nome, canal: 'Booking.com',
+    checkin: document.getElementById('imp-checkin').value,
+    checkout: document.getElementById('imp-checkout').value,
+    guests: document.getElementById('imp-guests').value,
+    price: document.getElementById('imp-price').value,
+    payment: 'OTA', pagamento: 'Não pago', status: 'Pendente',
+    email: g.email, phone: g.phone,
+    reservaNum: document.getElementById('imp-reservanum').value,
+    comissao: document.getElementById('imp-comissao').value
+  });
+  
+  persist(); renderAll(); closeModal('m-import');
+  if (g && S.guests.filter(x=>x.phone&&x.phone.replace(/\s/g,'')===tel.replace(/\s/g,'')).length > 0) {
+    // was existing guest - no extra message needed
+  }
+}
+
 function confirmImport() {
   const d=importedData||{};
   const gid=uid(), g={id:gid,name:d.name||'Hóspede',email:d.email||'',phone:d.phone||'',nationality:d.nationality||''};
@@ -774,8 +915,14 @@ function confirmImport() {
 
 function saveReserva() {
   const nome=document.getElementById('f-nome').value.trim(); if(!nome){alert('Por favor preenche o nome.');return;}
-  let g=S.guests.find(x=>x.name.toLowerCase()===nome.toLowerCase());
-  if(!g){g={id:uid(),name:nome,email:document.getElementById('f-email').value.trim(),phone:document.getElementById('f-tel').value.trim(),nationality:'',pais:'',comments:''}; S.guests.push(g);}
+  const tel=document.getElementById('f-tel').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  let g=null;
+  if(tel) g=S.guests.find(x=>x.phone&&x.phone.replace(/\s/g,'')===tel.replace(/\s/g,''));
+  if(!g&&email) g=S.guests.find(x=>x.email&&x.email.toLowerCase()===email.toLowerCase());
+  if(!g) g=S.guests.find(x=>x.name.toLowerCase()===nome.toLowerCase());
+  if(!g){g={id:uid(),name:nome,email:email,phone:tel,nationality:'',pais:'',comments:''}; S.guests.push(g);}
+  else{if(tel) g.phone=tel; if(email) g.email=email;}
   S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
   ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price'].forEach(id=>document.getElementById(id).value='');
   persist(); renderAll(); closeModal('m-reserva');
