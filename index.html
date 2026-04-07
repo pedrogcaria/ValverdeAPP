@@ -124,7 +124,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v1.9 · 07/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.0 · 07/04</span>
       </div>
     </div>
   </div>
@@ -499,16 +499,35 @@ async function persist() {
   }
 }
 
+function isPortuguese(b) {
+  const g = S.guests.find(x => x.id === b.guestId);
+  const nat = ((g && g.nationality) || (g && g.pais) || b.nationality || '').toLowerCase();
+  const ptKeywords = ['portugal', 'portuguesa', 'português', 'pt'];
+  return ptKeywords.some(k => nat.includes(k));
+}
+
 function waMsg(type, b) {
   const nome = b.name.split(' ')[0];
   const checkin = fmt(b.checkin);
   const checkout = fmt(b.checkout);
+  const pt = isPortuguese(b);
+
   const msgs = {
-    confirmacao: `Olá ${nome}! 😊 A sua reserva na *Valverde Villa* está confirmada.\n\n📅 Check-in: *${checkin}*\n📅 Check-out: *${checkout}*\n👥 Hóspedes: ${b.guests}\n\nQualquer questão estou à disposição!`,
-    checkin: `Olá ${nome}! 🔑 Amanhã é o dia da chegada à *Valverde Villa*!\n\n📅 Check-in: *${checkin}*\n🕒 Hora de entrada: a partir das 15h00\n\nEntrarei em contacto para combinar a entrega das chaves. Boa viagem! ✈️`,
-    boasvindas: `Bem-vindo(a) à *Valverde Villa*, ${nome}! 🏡☀️\n\nEspero que tudo esteja ao seu gosto. Estou disponível para qualquer necessidade. Que tenha uma estadia incrível no Algarve! 🌊`,
-    checkout: `Olá ${nome}! Já é amanhã o checkout (${checkout}) da *Valverde Villa*.\n\n🕙 Hora de saída: até às 10h00\n\nFoi um prazer recebê-lo(a)! Se precisar de ajuda para a bagagem ou transfer, é só avisar. 😊`,
-    review: `Olá ${nome}! 🌟 Esperamos que tenha gostado da estadia na *Valverde Villa*.\n\nA sua opinião é muito importante para nós! Poderia deixar uma avaliação no Booking.com? Demora apenas 2 minutos e ajuda muito. Obrigado! 🙏`
+    confirmacao: pt
+      ? `Olá ${nome}! 😊 A sua reserva na *Valverde Villa* está confirmada.\n\n📅 Check-in: *${checkin}*\n📅 Check-out: *${checkout}*\n👥 Hóspedes: ${b.guests}\n\nQualquer questão estou à disposição!`
+      : `Hi ${nome}! 😊 Your booking at *Valverde Villa* is confirmed.\n\n📅 Check-in: *${checkin}*\n📅 Check-out: *${checkout}*\n👥 Guests: ${b.guests}\n\nFeel free to reach out if you have any questions!`,
+    checkin: pt
+      ? `Olá ${nome}! 🔑 Amanhã é o dia da chegada à *Valverde Villa*!\n\n📅 Check-in: *${checkin}*\n🕒 Hora de entrada: a partir das 15h00\n\nEntrarei em contacto para combinar a entrega das chaves. Boa viagem! ✈️`
+      : `Hi ${nome}! 🔑 Tomorrow is your check-in day at *Valverde Villa*!\n\n📅 Check-in: *${checkin}*\n🕒 Arrival from: 3:00 PM\n\nI'll be in touch to arrange key handover. Safe travels! ✈️`,
+    boasvindas: pt
+      ? `Bem-vindo(a) à *Valverde Villa*, ${nome}! 🏡☀️\n\nEspero que tudo esteja ao seu gosto. Estou disponível para qualquer necessidade. Que tenha uma estadia incrível no Algarve! 🌊`
+      : `Welcome to *Valverde Villa*, ${nome}! 🏡☀️\n\nI hope everything is to your liking. I'm available for anything you need. Enjoy your stay in the Algarve! 🌊`,
+    checkout: pt
+      ? `Olá ${nome}! Já é amanhã o checkout (${checkout}) da *Valverde Villa*.\n\n🕙 Hora de saída: até às 10h00\n\nFoi um prazer recebê-lo(a)! Se precisar de ajuda para a bagagem ou transfer, é só avisar. 😊`
+      : `Hi ${nome}! Just a reminder that tomorrow is your check-out day (${checkout}) at *Valverde Villa*.\n\n🕙 Check-out by: 10:00 AM\n\nIt was a pleasure having you! Let me know if you need any help with luggage or a transfer. 😊`,
+    review: pt
+      ? `Olá ${nome}! 🌟 Esperamos que tenha gostado da estadia na *Valverde Villa*.\n\nA sua opinião é muito importante para nós! Poderia deixar uma avaliação no Booking.com? Demora apenas 2 minutos e ajuda muito. Obrigado! 🙏`
+      : `Hi ${nome}! 🌟 We hope you enjoyed your stay at *Valverde Villa*.\n\nYour feedback means a lot to us! Could you leave a review on Booking.com? It only takes 2 minutes and helps us a lot. Thank you! 🙏`
   };
   return msgs[type] || '';
 }
