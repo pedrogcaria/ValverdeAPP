@@ -124,7 +124,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.1 · 07/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.2 · 09/04</span>
       </div>
     </div>
   </div>
@@ -232,7 +232,28 @@ body { background: #f5f5f0; }
         <div class="section-title">WhatsApp</div>
         <div style="display:flex;flex-direction:column;gap:8px;" id="wa-buttons"></div>
       </div>
-      <button onclick="deleteReserva()" style="width:100%;padding:14px;background:none;color:#A32D2D;border:1px solid #A32D2D;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;margin-bottom:16px;">&#128465; Apagar reserva</button>
+      <div class="card" id="det-notas-card">
+        <div class="section-title">Notas internas</div>
+        <textarea id="det-notas" rows="3" placeholder="Notas privadas sobre esta reserva..." style="width:100%;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;padding:10px;font-size:14px;resize:none;color:#111;background:#f9f9f9;" onchange="saveNota()"></textarea>
+      </div>
+      <div class="card">
+        <div class="section-title">Pedidos especiais</div>
+        <div id="det-pedidos" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="pedidos-toggle-btns"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Depósito de segurança</div>
+        <div id="det-deposito-content"></div>
+        <button onclick="openDeposito()" style="font-size:13px;padding:8px 16px;border-radius:10px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;margin-top:6px;">+ Registar depósito</button>
+      </div>
+      <div class="card">
+        <div class="section-title">Checklist de limpeza</div>
+        <div id="det-checklist"></div>
+        <button onclick="resetChecklist()" style="font-size:12px;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.15);background:#f5f5f0;cursor:pointer;margin-top:8px;">↺ Reiniciar</button>
+        <button onclick="sendChecklistWA()" style="font-size:12px;padding:6px 14px;border-radius:20px;border:0.5px solid #25D366;color:#25D366;background:#fff;cursor:pointer;margin-top:8px;margin-left:6px;">WhatsApp checklist</button>
+      </div>
+      <button onclick="editReserva()" style="width:100%;padding:14px;background:#EBF4FF;color:#185FA5;border:1.5px solid #185FA5;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">&#9998; Editar reserva</button>
+      <button onclick="deleteReserva()" style="width:100%;padding:14px;background:none;color:#A32D2D;border:1px solid #A32D2D;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;margin-bottom:16px;">&#128465; Apagar reserva</button>
     </div>
   </div>
 
@@ -247,6 +268,8 @@ body { background: #f5f5f0; }
       <div class="filter-chip" onclick="filterChip(this,'g','Água')">Água</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Internet')">Internet</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Consumíveis')">Consumíveis</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Por pagar')">Por pagar</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Pago')">Pago</div>
     </div>
     <div class="metrics">
       <div class="metric"><div class="metric-label">Total este mês</div><div class="metric-value" style="color:#A32D2D" id="g-total">0 €</div></div>
@@ -304,7 +327,7 @@ body { background: #f5f5f0; }
   <div class="modal-overlay" id="m-choice">
     <div class="modal">
       <div class="modal-handle"></div>
-      <h2>Nova reserva</h2>
+      <h2 id="m-reserva-title">Nova reserva</h2>
       <button class="btn-import" onclick="openModal('m-import');closeModal('m-choice')">&#128247; Importar foto do Booking.com</button>
       <button class="btn-primary" onclick="openModal('m-reserva');closeModal('m-choice')">&#9998; Criar manualmente</button>
       <button class="btn-secondary" onclick="closeModal('m-choice')">Cancelar</button>
@@ -358,7 +381,7 @@ body { background: #f5f5f0; }
   <div class="modal-overlay" id="m-reserva">
     <div class="modal">
       <div class="modal-handle"></div>
-      <h2>Nova reserva</h2>
+      <h2 id="m-reserva-title">Nova reserva</h2>
       <div class="form-group"><label class="form-label">Nome do hóspede *</label><input type="text" id="f-nome" placeholder="Nome completo" /></div>
       <div class="form-group"><label class="form-label">Email</label><input type="email" id="f-email" placeholder="email@exemplo.com" /></div>
       <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="f-tel" placeholder="+351 9xx xxx xxx" /></div>
@@ -458,7 +481,7 @@ function saveSetup() {
   localStorage.setItem('vv_script', url);
   localStorage.removeItem('vv_local');
   document.getElementById('setup-status').textContent = 'A sincronizar...';
-  loadData().then(() => {
+  loadData(true).then(() => {
     document.getElementById('setup-status').textContent = '✓ Ligado ao Google Sheets!';
     setTimeout(() => closeModal('m-setup'), 1000);
   });
@@ -474,7 +497,7 @@ function openSetup() {
   openModal('m-setup');
 }
 
-async function loadData() {
+async function loadData(autoSync) {
   loadLocal();
   renderAll();
   if (!LOCAL && SCRIPT_URL) {
@@ -556,6 +579,148 @@ function renderWAButtons(b) {
       ${btn.label}
     </button>`
   ).join('');
+}
+
+// ---- NOTAS INTERNAS ----
+function saveNota() {
+  const b = S.bookings[curBookingIdx];
+  b.notas = document.getElementById('det-notas').value;
+  persist();
+}
+
+// ---- PEDIDOS ESPECIAIS ----
+const PEDIDOS_LIST = ['Berço','Cadeira alta','Piscina aquecida','Transfer aeroporto','Cama extra','Dieta especial','Pet friendly'];
+function renderPedidos(b) {
+  const ativos = b.pedidos || [];
+  document.getElementById('det-pedidos').innerHTML = ativos.length
+    ? ativos.map(p => `<span style="background:#EBF4FF;color:#185FA5;font-size:12px;padding:4px 10px;border-radius:20px;">${p}</span>`).join('')
+    : '<span style="font-size:13px;color:#888;">Nenhum pedido especial</span>';
+  document.getElementById('pedidos-toggle-btns').innerHTML = PEDIDOS_LIST.map(p => {
+    const on = ativos.includes(p);
+    return `<button onclick="togglePedido('${p}')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid ${on?'#185FA5':'rgba(0,0,0,0.15)'};background:${on?'#185FA5':'#f5f5f0'};color:${on?'#fff':'#666'};cursor:pointer;">${p}</button>`;
+  }).join('');
+}
+function togglePedido(p) {
+  const b = S.bookings[curBookingIdx];
+  if (!b.pedidos) b.pedidos = [];
+  const i = b.pedidos.indexOf(p);
+  if (i >= 0) b.pedidos.splice(i, 1); else b.pedidos.push(p);
+  persist(); renderPedidos(b);
+}
+
+// ---- CHECKLIST LIMPEZA ----
+const CHECKLIST_ITEMS = ['Mudar roupa de cama','Mudar toalhas','Limpar casas de banho','Limpar cozinha','Aspirar e limpar chão','Repor amenities','Verificar AC e electrodomésticos','Verificar piscina','Recolher lixo','Verificar avarias'];
+function renderChecklist(b) {
+  const done = b.checklist || [];
+  document.getElementById('det-checklist').innerHTML = CHECKLIST_ITEMS.map((item, i) => {
+    const checked = done.includes(i);
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);cursor:pointer;">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleCheck(${i})" style="width:16px;height:16px;accent-color:#185FA5;" />
+      <span style="font-size:13px;color:#111;${checked?'text-decoration:line-through;color:#aaa':''}">${item}</span>
+    </label>`;
+  }).join('');
+  const pct = Math.round(done.length / CHECKLIST_ITEMS.length * 100);
+  document.getElementById('det-checklist').innerHTML += `<div style="margin-top:10px;font-size:12px;color:#888;">${done.length}/${CHECKLIST_ITEMS.length} tarefas · ${pct}%</div>`;
+}
+function toggleCheck(i) {
+  const b = S.bookings[curBookingIdx];
+  if (!b.checklist) b.checklist = [];
+  const idx = b.checklist.indexOf(i);
+  if (idx >= 0) b.checklist.splice(idx, 1); else b.checklist.push(i);
+  persist(); renderChecklist(b);
+}
+function resetChecklist() {
+  const b = S.bookings[curBookingIdx];
+  if (!confirm('Reiniciar a checklist?')) return;
+  b.checklist = []; persist(); renderChecklist(b);
+}
+function sendChecklistWA() {
+  const b = S.bookings[curBookingIdx];
+  const done = b.checklist || [];
+  const lines = CHECKLIST_ITEMS.map((item, i) => `${done.includes(i)?'✅':'⬜'} ${item}`).join('\n');
+  const msg = encodeURIComponent(`*Checklist de limpeza — ${b.name}*\nCheck-out: ${fmt(b.checkout)}\n\n${lines}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// ---- DEPÓSITO ----
+function openDeposito() {
+  const b = S.bookings[curBookingIdx];
+  const dep = b.deposito || {};
+  document.getElementById('dep-valor').value = dep.valor || '';
+  document.getElementById('dep-datarec').value = dep.datarec || '';
+  document.getElementById('dep-datadev').value = dep.datadev || '';
+  document.getElementById('dep-estado').value = dep.estado || 'Recebido';
+  document.getElementById('dep-notas').value = dep.notas || '';
+  openModal('m-deposito');
+}
+function saveDeposito() {
+  const b = S.bookings[curBookingIdx];
+  b.deposito = {
+    valor: document.getElementById('dep-valor').value,
+    datarec: document.getElementById('dep-datarec').value,
+    datadev: document.getElementById('dep-datadev').value,
+    estado: document.getElementById('dep-estado').value,
+    notas: document.getElementById('dep-notas').value
+  };
+  persist(); renderDeposito(b); closeModal('m-deposito');
+}
+function renderDeposito(b) {
+  const dep = b.deposito;
+  if (!dep || !dep.valor) { document.getElementById('det-deposito-content').innerHTML = '<div style="font-size:13px;color:#888;">Sem depósito registado.</div>'; return; }
+  const stateColor = dep.estado === 'Devolvido' ? '#0F6E56' : dep.estado === 'Recebido' ? '#185FA5' : '#A32D2D';
+  document.getElementById('det-deposito-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+      <span style="font-size:13px;color:#888;">Valor</span><span style="font-size:14px;font-weight:600;">${euro(dep.valor)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+      <span style="font-size:13px;color:#888;">Estado</span><span style="font-size:13px;font-weight:600;color:${stateColor};">${dep.estado}</span>
+    </div>
+    ${dep.datadev?`<div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="font-size:13px;color:#888;">Devolução prevista</span><span style="font-size:13px;">${fmt(dep.datadev)}</span></div>`:''}
+    ${dep.notas?`<div style="font-size:12px;color:#888;margin-top:4px;">${dep.notas}</div>`:''}
+  `;
+}
+
+// ---- EDITAR RESERVA ----
+function editReserva() {
+  const b = S.bookings[curBookingIdx];
+  document.getElementById('m-reserva-title').textContent = 'Editar reserva';
+  document.getElementById('f-nome').value = b.name;
+  document.getElementById('f-email').value = b.email || '';
+  document.getElementById('f-tel').value = b.phone || '';
+  document.getElementById('f-checkin').value = b.checkin;
+  document.getElementById('f-checkout').value = b.checkout;
+  document.getElementById('f-guests').value = b.guests;
+  document.getElementById('f-price').value = b.price;
+  document.getElementById('f-canal').value = b.canal;
+  document.getElementById('f-payment').value = b.payment;
+  document.getElementById('f-pagstatus').value = b.pagamento || 'Não pago';
+  openModal('m-reserva');
+  // Override save button to update instead of create
+  document.querySelector('#m-reserva .btn-primary').onclick = saveEditReserva;
+}
+function saveEditReserva() {
+  const b = S.bookings[curBookingIdx];
+  const nome = document.getElementById('f-nome').value.trim();
+  if (!nome) { alert('Por favor preenche o nome.'); return; }
+  b.name = nome;
+  b.email = document.getElementById('f-email').value.trim();
+  b.phone = document.getElementById('f-tel').value.trim();
+  b.checkin = document.getElementById('f-checkin').value;
+  b.checkout = document.getElementById('f-checkout').value;
+  b.guests = document.getElementById('f-guests').value;
+  b.price = document.getElementById('f-price').value;
+  b.canal = document.getElementById('f-canal').value;
+  b.payment = document.getElementById('f-payment').value;
+  b.pagamento = document.getElementById('f-pagstatus').value;
+  // Update guest too
+  const g = S.guests.find(x => x.id === b.guestId);
+  if (g) { g.name = nome; g.email = b.email; g.phone = b.phone; }
+  persist(); renderAll();
+  closeModal('m-reserva');
+  // Restore save button and title
+  document.getElementById('m-reserva-title').textContent = 'Nova reserva';
+  document.querySelector('#m-reserva .btn-primary').onclick = saveReserva;
+  openBD(curBookingIdx);
 }
 
 function renderAll() {
@@ -760,6 +925,10 @@ function openBD(i) {
   const gRes=S.expenses.filter(e=>e.bookingId===b.id);
   document.getElementById('det-gastos').innerHTML=gRes.length?gRes.map(e=>`<div class="expense-item"><div><div style="font-size:14px;font-weight:600">${e.desc||e.category}</div><div class="expense-cat">${e.category}${e.paidto?' · '+e.paidto:''}</div></div><div class="expense-amount">–${euro(e.amount)}</div></div>`).join(''):'<div style="font-size:13px;color:#888">Sem gastos associados.</div>';
   renderWAButtons(b);
+  document.getElementById('det-notas').value = b.notas || '';
+  renderPedidos(b);
+  renderChecklist(b);
+  renderDeposito(b);
   document.getElementById('reservas-list').style.display='none';
   document.getElementById('booking-detail').classList.add('open');
 }
