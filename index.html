@@ -124,7 +124,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.0 · 07/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.1 · 07/04</span>
       </div>
     </div>
   </div>
@@ -393,7 +393,8 @@ body { background: #f5f5f0; }
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="g-desc" placeholder="Ex: Limpeza após reserva Santos" /></div>
       <div class="form-group"><label class="form-label">Pago a</label><input type="text" id="g-paidto" placeholder="Nome do fornecedor" /></div>
       <div class="form-group"><label class="form-label">Associar a reserva (opcional)</label><select id="g-reserva"><option value="">Nenhuma</option></select></div>
-      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="g-pago"><option value="1">Pago</option><option value="0">Por pagar</option></select></div>
+      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="g-pago" onchange="toggleDataPag()"><option value="1">Pago</option><option value="0">Por pagar</option></select></div>
+      <div class="form-group" id="g-datapag-group"><label class="form-label">Data de pagamento</label><input type="date" id="g-datapag" /></div>
       <button class="btn-primary" id="g-save-btn" onclick="saveGasto()">Guardar gasto</button>
       <button class="btn-secondary" onclick="closeModal('m-gasto')">Cancelar</button>
     </div>
@@ -712,12 +713,13 @@ function renderGastos() {
   const ri = S.expenses.indexOf(e);
   const pago = e.pago !== false;
   const pagBadge = pago ? '<span class="badge badge-pago">Pago</span>' : '<span class="badge badge-nao-pago">Por pagar</span>';
+  const datapagStr = (pago && e.datapag) ? ' · pago em ' + fmt(e.datapag) : '';
   return `<div class="expense-item">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <div style="font-size:14px;font-weight:600;color:#111">${e.desc||e.category}</div>${pagBadge}
       </div>
-      <div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}</div>
+      <div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}${datapagStr}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px;">
       <div class="expense-amount">–${euro(e.amount)}</div>
@@ -1031,6 +1033,13 @@ function saveReserva() {
 }
 
 let editGastoIdx = null;
+
+function toggleDataPag() {
+  const pago = document.getElementById("g-pago").value === "1";
+  const grp = document.getElementById("g-datapag-group");
+  if (grp) grp.style.display = pago ? "block" : "none";
+}
+
 function saveGasto() {
   const amt=document.getElementById('g-amount').value; if(!amt){alert('Por favor preenche o valor.');return;}
   const obj = {
@@ -1041,7 +1050,8 @@ function saveGasto() {
     desc:document.getElementById('g-desc').value,
     paidto:document.getElementById('g-paidto').value,
     bookingId:document.getElementById('g-reserva').value,
-    pago: document.getElementById('g-pago').value === '1'
+    pago: document.getElementById('g-pago').value === '1',
+    datapag: document.getElementById('g-pago').value === '1' ? document.getElementById('g-datapag').value : ''
   };
   if (editGastoIdx !== null) { S.expenses[editGastoIdx] = obj; editGastoIdx = null; }
   else S.expenses.push(obj);
@@ -1062,6 +1072,8 @@ function editGasto(i) {
   document.getElementById('g-paidto').value = e.paidto||'';
   document.getElementById('g-reserva').value = e.bookingId||'';
   document.getElementById('g-pago').value = e.pago !== false ? '1' : '0';
+  document.getElementById('g-datapag').value = e.datapag||'';
+  toggleDataPag();
   document.getElementById('g-save-btn').textContent = 'Actualizar gasto';
   openModal('m-gasto');
 }
