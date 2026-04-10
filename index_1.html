@@ -11,12 +11,12 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 body { background: #f5f5f0; }
-.app { width: 100%; max-width: 430px; margin: 0 auto; background: #f5f5f0; min-height: 100vh; position: relative; display: flex; flex-direction: column; }
+.app { width: 100%; max-width: 430px; margin: 0 auto; background: #f5f5f0; min-height: 100vh; position: relative; display: flex; flex-direction: column; } @media (min-width: 500px) { body { background: #e8e8e3; } .app { box-shadow: 0 0 40px rgba(0,0,0,0.1); } .fab { right: calc(50% - 215px + 16px) !important; } }
 .topbar { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
 .topbar h1 { font-size: 20px; font-weight: 600; color: #111; }
 .topbar p { font-size: 12px; color: #888; margin-top: 2px; }
 .logo-badge { background: #185FA5; color: #fff; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 20px; letter-spacing: 0.03em; }
-.screen { padding: 16px 16px 90px; display: none; min-height: 0; }
+.screen { padding: 16px 16px 90px; display: none; min-height: 0; overflow-y: auto; }
 .screen.active { display: block; }
 .bottomnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 0.5px solid rgba(0,0,0,0.1); display: flex; height: 68px; padding-bottom: env(safe-area-inset-bottom); z-index: 10; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 .navbtn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: none; font-size: 10px; color: #999; padding: 0; }
@@ -112,6 +112,7 @@ body { background: #f5f5f0; }
 .comissao-val { font-size: 12px; font-weight: 600; color: #111; }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -124,7 +125,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v1.4 · 03/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.3 · 10/04</span>
       </div>
     </div>
   </div>
@@ -132,10 +133,26 @@ body { background: #f5f5f0; }
   <!-- DASHBOARD -->
   <div class="screen active" id="screen-dashboard">
     <div class="metrics">
-      <div class="metric"><div class="metric-label">Receita este mês</div><div class="metric-value" style="color:#0F6E56" id="d-receita">0 €</div></div>
-      <div class="metric"><div class="metric-label">Gastos este mês</div><div class="metric-value" style="color:#A32D2D" id="d-gastos">0 €</div></div>
-      <div class="metric"><div class="metric-label">Lucro</div><div class="metric-value" id="d-lucro">0 €</div></div>
-      <div class="metric"><div class="metric-label">Por receber</div><div class="metric-value" style="color:#BA7517" id="d-porreceber">0 €</div></div>
+      <div class="metric">
+        <div class="metric-label" id="d-receita-label">Receita</div>
+        <div class="metric-value" style="color:#0F6E56" id="d-receita">0 €</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px;">Ano: <span id="d-receita-ano">0 €</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label" id="d-gastos-label">Gastos</div>
+        <div class="metric-value" style="color:#A32D2D" id="d-gastos">0 €</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px;">Ano: <span id="d-gastos-ano">0 €</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label" id="d-lucro-label">Lucro</div>
+        <div class="metric-value" id="d-lucro">0 €</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px;">Ano: <span id="d-lucro-ano">0 €</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Por receber</div>
+        <div class="metric-value" style="color:#BA7517" id="d-porreceber">0 €</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px;">&nbsp;</div>
+      </div>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -212,7 +229,32 @@ body { background: #f5f5f0; }
         <div class="section-title">Gastos desta reserva</div>
         <div id="det-gastos"></div>
       </div>
-      <button onclick="deleteReserva()" style="width:100%;padding:14px;background:none;color:#A32D2D;border:1px solid #A32D2D;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;margin-bottom:16px;">&#128465; Apagar reserva</button>
+      <div class="card">
+        <div class="section-title">WhatsApp</div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="wa-buttons"></div>
+      </div>
+      <div class="card" id="det-notas-card">
+        <div class="section-title">Notas internas</div>
+        <textarea id="det-notas" rows="3" placeholder="Notas privadas sobre esta reserva..." style="width:100%;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;padding:10px;font-size:14px;resize:none;color:#111;background:#f9f9f9;" onchange="saveNota()"></textarea>
+      </div>
+      <div class="card">
+        <div class="section-title">Pedidos especiais</div>
+        <div id="det-pedidos" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="pedidos-toggle-btns"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Depósito de segurança</div>
+        <div id="det-deposito-content"></div>
+        <button onclick="openDeposito()" style="font-size:13px;padding:8px 16px;border-radius:10px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;margin-top:6px;">+ Registar depósito</button>
+      </div>
+      <div class="card">
+        <div class="section-title">Checklist de limpeza</div>
+        <div id="det-checklist"></div>
+        <button onclick="resetChecklist()" style="font-size:12px;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.15);background:#f5f5f0;cursor:pointer;margin-top:8px;">↺ Reiniciar</button>
+        <button onclick="sendChecklistWA()" style="font-size:12px;padding:6px 14px;border-radius:20px;border:0.5px solid #25D366;color:#25D366;background:#fff;cursor:pointer;margin-top:8px;margin-left:6px;">WhatsApp checklist</button>
+      </div>
+      <button onclick="editReserva()" style="width:100%;padding:14px;background:#EBF4FF;color:#185FA5;border:1.5px solid #185FA5;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;">&#9998; Editar reserva</button>
+      <button onclick="deleteReserva()" style="width:100%;padding:14px;background:none;color:#A32D2D;border:1px solid #A32D2D;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;margin-bottom:16px;">&#128465; Apagar reserva</button>
     </div>
   </div>
 
@@ -227,6 +269,8 @@ body { background: #f5f5f0; }
       <div class="filter-chip" onclick="filterChip(this,'g','Água')">Água</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Internet')">Internet</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Consumíveis')">Consumíveis</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Por pagar')">Por pagar</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Pago')">Pago</div>
     </div>
     <div class="metrics">
       <div class="metric"><div class="metric-label">Total este mês</div><div class="metric-value" style="color:#A32D2D" id="g-total">0 €</div></div>
@@ -271,11 +315,42 @@ body { background: #f5f5f0; }
   </div>
 
   <div class="saving" id="saving">A guardar...</div>
+  <!-- RELATÓRIOS -->
+  <div class="screen" id="screen-relatorios">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="rel-ano" onchange="renderRelatorios()" style="padding:8px 12px;border:0.5px solid rgba(0,0,0,0.2);border-radius:10px;font-size:14px;background:#fff;"></select>
+      <button onclick="exportPDF()" style="padding:8px 16px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">&#128196; Exportar PDF</button>
+    </div>
+    <!-- Métricas anuais -->
+    <div class="metrics" id="rel-metrics"></div>
+    <!-- Receita mensal -->
+    <div class="card">
+      <div class="section-title">Receita mensal</div>
+      <canvas id="chart-receita" height="160"></canvas>
+    </div>
+    <!-- Gastos por categoria -->
+    <div class="card">
+      <div class="section-title">Gastos por categoria</div>
+      <canvas id="chart-gastos" height="160"></canvas>
+    </div>
+    <!-- Taxa de ocupação -->
+    <div class="card">
+      <div class="section-title">Taxa de ocupação mensal (%)</div>
+      <canvas id="chart-ocup" height="140"></canvas>
+    </div>
+    <!-- Resumo anual tabela -->
+    <div class="card">
+      <div class="section-title">Resumo por mês</div>
+      <div id="rel-tabela"></div>
+    </div>
+  </div>
+
   <div class="bottomnav">
     <button class="navbtn active" onclick="switchTab('dashboard',this)"><span class="navicon">&#9636;</span><span>Dashboard</span></button>
     <button class="navbtn" onclick="switchTab('reservas',this)"><span class="navicon">&#128197;</span><span>Reservas</span></button>
     <button class="navbtn" onclick="switchTab('gastos',this)"><span class="navicon">&#128176;</span><span>Gastos</span></button>
     <button class="navbtn" onclick="switchTab('hospedes',this)"><span class="navicon">&#128101;</span><span>Hóspedes</span></button>
+    <button class="navbtn" onclick="switchTab('relatorios',this)"><span class="navicon">&#128202;</span><span>Relatórios</span></button>
   </div>
 
   <button class="fab" id="fab-btn" onclick="openFab()">+</button>
@@ -284,7 +359,7 @@ body { background: #f5f5f0; }
   <div class="modal-overlay" id="m-choice">
     <div class="modal">
       <div class="modal-handle"></div>
-      <h2>Nova reserva</h2>
+      <h2 id="m-reserva-title">Nova reserva</h2>
       <button class="btn-import" onclick="openModal('m-import');closeModal('m-choice')">&#128247; Importar foto do Booking.com</button>
       <button class="btn-primary" onclick="openModal('m-reserva');closeModal('m-choice')">&#9998; Criar manualmente</button>
       <button class="btn-secondary" onclick="closeModal('m-choice')">Cancelar</button>
@@ -338,7 +413,7 @@ body { background: #f5f5f0; }
   <div class="modal-overlay" id="m-reserva">
     <div class="modal">
       <div class="modal-handle"></div>
-      <h2>Nova reserva</h2>
+      <h2 id="m-reserva-title">Nova reserva</h2>
       <div class="form-group"><label class="form-label">Nome do hóspede *</label><input type="text" id="f-nome" placeholder="Nome completo" /></div>
       <div class="form-group"><label class="form-label">Email</label><input type="email" id="f-email" placeholder="email@exemplo.com" /></div>
       <div class="form-group"><label class="form-label">Telefone</label><input type="text" id="f-tel" placeholder="+351 9xx xxx xxx" /></div>
@@ -373,7 +448,8 @@ body { background: #f5f5f0; }
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="g-desc" placeholder="Ex: Limpeza após reserva Santos" /></div>
       <div class="form-group"><label class="form-label">Pago a</label><input type="text" id="g-paidto" placeholder="Nome do fornecedor" /></div>
       <div class="form-group"><label class="form-label">Associar a reserva (opcional)</label><select id="g-reserva"><option value="">Nenhuma</option></select></div>
-      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="g-pago"><option value="1">Pago</option><option value="0">Por pagar</option></select></div>
+      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="g-pago" onchange="toggleDataPag()"><option value="1">Pago</option><option value="0">Por pagar</option></select></div>
+      <div class="form-group" id="g-datapag-group"><label class="form-label">Data de pagamento</label><input type="date" id="g-datapag" /></div>
       <button class="btn-primary" id="g-save-btn" onclick="saveGasto()">Guardar gasto</button>
       <button class="btn-secondary" onclick="closeModal('m-gasto')">Cancelar</button>
     </div>
@@ -437,7 +513,8 @@ function saveSetup() {
   localStorage.setItem('vv_script', url);
   localStorage.removeItem('vv_local');
   document.getElementById('setup-status').textContent = 'A sincronizar...';
-  loadData().then(() => {
+  loadData(true).then(() => {
+    setTimeout(checkNotificacoes, 2000);
     document.getElementById('setup-status').textContent = '✓ Ligado ao Google Sheets!';
     setTimeout(() => closeModal('m-setup'), 1000);
   });
@@ -453,7 +530,7 @@ function openSetup() {
   openModal('m-setup');
 }
 
-async function loadData() {
+async function loadData(autoSync) {
   loadLocal();
   renderAll();
   if (!LOCAL && SCRIPT_URL) {
@@ -479,7 +556,412 @@ async function persist() {
   }
 }
 
-function renderAll() { renderDash(); renderReservas(); renderGastos(); renderHospedes(); }
+function isPortuguese(b) {
+  const g = S.guests.find(x => x.id === b.guestId);
+  const nat = ((g && g.nationality) || (g && g.pais) || b.nationality || '').toLowerCase();
+  const ptKeywords = ['portugal', 'portuguesa', 'português', 'pt'];
+  return ptKeywords.some(k => nat.includes(k));
+}
+
+function waMsg(type, b) {
+  const nome = b.name.split(' ')[0];
+  const checkin = fmt(b.checkin);
+  const checkout = fmt(b.checkout);
+  const pt = isPortuguese(b);
+
+  const msgs = {
+    confirmacao: pt
+      ? `Olá ${nome}! 😊 A sua reserva na *Valverde Villa* está confirmada.\n\n📅 Check-in: *${checkin}*\n📅 Check-out: *${checkout}*\n👥 Hóspedes: ${b.guests}\n\nQualquer questão estou à disposição!`
+      : `Hi ${nome}! 😊 Your booking at *Valverde Villa* is confirmed.\n\n📅 Check-in: *${checkin}*\n📅 Check-out: *${checkout}*\n👥 Guests: ${b.guests}\n\nFeel free to reach out if you have any questions!`,
+    checkin: pt
+      ? `Olá ${nome}! 🔑 Amanhã é o dia da chegada à *Valverde Villa*!\n\n📅 Check-in: *${checkin}*\n🕒 Hora de entrada: a partir das 15h00\n\nEntrarei em contacto para combinar a entrega das chaves. Boa viagem! ✈️`
+      : `Hi ${nome}! 🔑 Tomorrow is your check-in day at *Valverde Villa*!\n\n📅 Check-in: *${checkin}*\n🕒 Arrival from: 3:00 PM\n\nI'll be in touch to arrange key handover. Safe travels! ✈️`,
+    boasvindas: pt
+      ? `Bem-vindo(a) à *Valverde Villa*, ${nome}! 🏡☀️\n\nEspero que tudo esteja ao seu gosto. Estou disponível para qualquer necessidade. Que tenha uma estadia incrível no Algarve! 🌊`
+      : `Welcome to *Valverde Villa*, ${nome}! 🏡☀️\n\nI hope everything is to your liking. I'm available for anything you need. Enjoy your stay in the Algarve! 🌊`,
+    checkout: pt
+      ? `Olá ${nome}! Já é amanhã o checkout (${checkout}) da *Valverde Villa*.\n\n🕙 Hora de saída: até às 10h00\n\nFoi um prazer recebê-lo(a)! Se precisar de ajuda para a bagagem ou transfer, é só avisar. 😊`
+      : `Hi ${nome}! Just a reminder that tomorrow is your check-out day (${checkout}) at *Valverde Villa*.\n\n🕙 Check-out by: 10:00 AM\n\nIt was a pleasure having you! Let me know if you need any help with luggage or a transfer. 😊`,
+    review: pt
+      ? `Olá ${nome}! 🌟 Esperamos que tenha gostado da estadia na *Valverde Villa*.\n\nA sua opinião é muito importante para nós! Poderia deixar uma avaliação no Booking.com? Demora apenas 2 minutos e ajuda muito. Obrigado! 🙏`
+      : `Hi ${nome}! 🌟 We hope you enjoyed your stay at *Valverde Villa*.\n\nYour feedback means a lot to us! Could you leave a review on Booking.com? It only takes 2 minutes and helps us a lot. Thank you! 🙏`
+  };
+  return msgs[type] || '';
+}
+
+function sendWA(type) {
+  const b = S.bookings[curBookingIdx];
+  const phone = (b.phone || '').replace(/[^0-9+]/g, '');
+  const msg = encodeURIComponent(waMsg(type, b));
+  const url = phone
+    ? `https://wa.me/${phone.replace('+','')}?text=${msg}`
+    : `https://wa.me/?text=${msg}`;
+  window.open(url, '_blank');
+}
+
+function renderWAButtons(b) {
+  const btns = [
+    { type: 'confirmacao', label: '✅ Confirmação de reserva', color: '#25D366' },
+    { type: 'checkin', label: '🔑 Lembrete check-in', color: '#128C7E' },
+    { type: 'boasvindas', label: '👋 Boas-vindas', color: '#075E54' },
+    { type: 'checkout', label: '🕙 Lembrete checkout', color: '#128C7E' },
+    { type: 'review', label: '⭐ Pedir avaliação', color: '#075E54' },
+  ];
+  document.getElementById('wa-buttons').innerHTML = btns.map(btn =>
+    `<button onclick="sendWA('${btn.type}')" style="width:100%;padding:11px 16px;background:${btn.color};color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;">
+      ${btn.label}
+    </button>`
+  ).join('');
+}
+
+// ---- NOTAS INTERNAS ----
+function saveNota() {
+  const b = S.bookings[curBookingIdx];
+  b.notas = document.getElementById('det-notas').value;
+  persist();
+}
+
+// ---- PEDIDOS ESPECIAIS ----
+const PEDIDOS_LIST = ['Berço','Cadeira alta','Piscina aquecida','Transfer aeroporto','Cama extra','Dieta especial','Pet friendly'];
+function renderPedidos(b) {
+  const ativos = b.pedidos || [];
+  document.getElementById('det-pedidos').innerHTML = ativos.length
+    ? ativos.map(p => `<span style="background:#EBF4FF;color:#185FA5;font-size:12px;padding:4px 10px;border-radius:20px;">${p}</span>`).join('')
+    : '<span style="font-size:13px;color:#888;">Nenhum pedido especial</span>';
+  document.getElementById('pedidos-toggle-btns').innerHTML = PEDIDOS_LIST.map(p => {
+    const on = ativos.includes(p);
+    return `<button onclick="togglePedido('${p}')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid ${on?'#185FA5':'rgba(0,0,0,0.15)'};background:${on?'#185FA5':'#f5f5f0'};color:${on?'#fff':'#666'};cursor:pointer;">${p}</button>`;
+  }).join('');
+}
+function togglePedido(p) {
+  const b = S.bookings[curBookingIdx];
+  if (!b.pedidos) b.pedidos = [];
+  const i = b.pedidos.indexOf(p);
+  if (i >= 0) b.pedidos.splice(i, 1); else b.pedidos.push(p);
+  persist(); renderPedidos(b);
+}
+
+// ---- CHECKLIST LIMPEZA ----
+const CHECKLIST_ITEMS = ['Mudar roupa de cama','Mudar toalhas','Limpar casas de banho','Limpar cozinha','Aspirar e limpar chão','Repor amenities','Verificar AC e electrodomésticos','Verificar piscina','Recolher lixo','Verificar avarias'];
+function renderChecklist(b) {
+  const done = b.checklist || [];
+  document.getElementById('det-checklist').innerHTML = CHECKLIST_ITEMS.map((item, i) => {
+    const checked = done.includes(i);
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);cursor:pointer;">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleCheck(${i})" style="width:16px;height:16px;accent-color:#185FA5;" />
+      <span style="font-size:13px;color:#111;${checked?'text-decoration:line-through;color:#aaa':''}">${item}</span>
+    </label>`;
+  }).join('');
+  const pct = Math.round(done.length / CHECKLIST_ITEMS.length * 100);
+  document.getElementById('det-checklist').innerHTML += `<div style="margin-top:10px;font-size:12px;color:#888;">${done.length}/${CHECKLIST_ITEMS.length} tarefas · ${pct}%</div>`;
+}
+function toggleCheck(i) {
+  const b = S.bookings[curBookingIdx];
+  if (!b.checklist) b.checklist = [];
+  const idx = b.checklist.indexOf(i);
+  if (idx >= 0) b.checklist.splice(idx, 1); else b.checklist.push(i);
+  persist(); renderChecklist(b);
+}
+function resetChecklist() {
+  const b = S.bookings[curBookingIdx];
+  if (!confirm('Reiniciar a checklist?')) return;
+  b.checklist = []; persist(); renderChecklist(b);
+}
+function sendChecklistWA() {
+  const b = S.bookings[curBookingIdx];
+  const done = b.checklist || [];
+  const lines = CHECKLIST_ITEMS.map((item, i) => `${done.includes(i)?'✅':'⬜'} ${item}`).join('\n');
+  const msg = encodeURIComponent(`*Checklist de limpeza — ${b.name}*\nCheck-out: ${fmt(b.checkout)}\n\n${lines}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// ---- DEPÓSITO ----
+function openDeposito() {
+  const b = S.bookings[curBookingIdx];
+  const dep = b.deposito || {};
+  document.getElementById('dep-valor').value = dep.valor || '';
+  document.getElementById('dep-datarec').value = dep.datarec || '';
+  document.getElementById('dep-datadev').value = dep.datadev || '';
+  document.getElementById('dep-estado').value = dep.estado || 'Recebido';
+  document.getElementById('dep-notas').value = dep.notas || '';
+  openModal('m-deposito');
+}
+function saveDeposito() {
+  const b = S.bookings[curBookingIdx];
+  b.deposito = {
+    valor: document.getElementById('dep-valor').value,
+    datarec: document.getElementById('dep-datarec').value,
+    datadev: document.getElementById('dep-datadev').value,
+    estado: document.getElementById('dep-estado').value,
+    notas: document.getElementById('dep-notas').value
+  };
+  persist(); renderDeposito(b); closeModal('m-deposito');
+}
+function renderDeposito(b) {
+  const dep = b.deposito;
+  if (!dep || !dep.valor) { document.getElementById('det-deposito-content').innerHTML = '<div style="font-size:13px;color:#888;">Sem depósito registado.</div>'; return; }
+  const stateColor = dep.estado === 'Devolvido' ? '#0F6E56' : dep.estado === 'Recebido' ? '#185FA5' : '#A32D2D';
+  document.getElementById('det-deposito-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+      <span style="font-size:13px;color:#888;">Valor</span><span style="font-size:14px;font-weight:600;">${euro(dep.valor)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+      <span style="font-size:13px;color:#888;">Estado</span><span style="font-size:13px;font-weight:600;color:${stateColor};">${dep.estado}</span>
+    </div>
+    ${dep.datadev?`<div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="font-size:13px;color:#888;">Devolução prevista</span><span style="font-size:13px;">${fmt(dep.datadev)}</span></div>`:''}
+    ${dep.notas?`<div style="font-size:12px;color:#888;margin-top:4px;">${dep.notas}</div>`:''}
+  `;
+}
+
+// ---- EDITAR RESERVA ----
+function editReserva() {
+  const b = S.bookings[curBookingIdx];
+  document.getElementById('m-reserva-title').textContent = 'Editar reserva';
+  document.getElementById('f-nome').value = b.name;
+  document.getElementById('f-email').value = b.email || '';
+  document.getElementById('f-tel').value = b.phone || '';
+  document.getElementById('f-checkin').value = b.checkin;
+  document.getElementById('f-checkout').value = b.checkout;
+  document.getElementById('f-guests').value = b.guests;
+  document.getElementById('f-price').value = b.price;
+  document.getElementById('f-canal').value = b.canal;
+  document.getElementById('f-payment').value = b.payment;
+  document.getElementById('f-pagstatus').value = b.pagamento || 'Não pago';
+  openModal('m-reserva');
+  // Override save button to update instead of create
+  document.querySelector('#m-reserva .btn-primary').onclick = saveEditReserva;
+}
+function saveEditReserva() {
+  const b = S.bookings[curBookingIdx];
+  const nome = document.getElementById('f-nome').value.trim();
+  if (!nome) { alert('Por favor preenche o nome.'); return; }
+  b.name = nome;
+  b.email = document.getElementById('f-email').value.trim();
+  b.phone = document.getElementById('f-tel').value.trim();
+  b.checkin = document.getElementById('f-checkin').value;
+  b.checkout = document.getElementById('f-checkout').value;
+  b.guests = document.getElementById('f-guests').value;
+  b.price = document.getElementById('f-price').value;
+  b.canal = document.getElementById('f-canal').value;
+  b.payment = document.getElementById('f-payment').value;
+  b.pagamento = document.getElementById('f-pagstatus').value;
+  // Update guest too
+  const g = S.guests.find(x => x.id === b.guestId);
+  if (g) { g.name = nome; g.email = b.email; g.phone = b.phone; }
+  persist(); renderAll();
+  closeModal('m-reserva');
+  // Restore save button and title
+  document.getElementById('m-reserva-title').textContent = 'Nova reserva';
+  document.querySelector('#m-reserva .btn-primary').onclick = saveReserva;
+  openBD(curBookingIdx);
+}
+
+// ============ RELATÓRIOS ============
+function renderRelatorios() {
+  const now = new Date();
+  const anoSel = parseInt(document.getElementById('rel-ano').value) || now.getFullYear();
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // Preencher anos disponíveis
+  const anos = [...new Set(S.bookings.map(b => new Date(b.checkin).getFullYear()))];
+  if (!anos.includes(now.getFullYear())) anos.push(now.getFullYear());
+  anos.sort((a,b)=>b-a);
+  const sel = document.getElementById('rel-ano');
+  if (sel.options.length === 0) {
+    anos.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); });
+    sel.value = anoSel;
+  }
+
+  // Dados mensais
+  const receitaMes = Array(12).fill(0);
+  const lucroMes = Array(12).fill(0);
+  const gastosMes = Array(12).fill(0);
+  const ocupMes = Array(12).fill(0);
+
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    const ci = new Date(b.checkin);
+    if (ci.getFullYear() !== anoSel) return;
+    const m = ci.getMonth();
+    receitaMes[m] += parseFloat(b.price||0);
+  });
+  S.expenses.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getFullYear() !== anoSel) return;
+    gastosMes[d.getMonth()] += parseFloat(e.amount||0);
+  });
+  for(let m=0;m<12;m++) lucroMes[m] = receitaMes[m] - gastosMes[m];
+
+  // Taxa de ocupação
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    const ci = new Date(b.checkin), co = new Date(b.checkout);
+    for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)) {
+      if (d.getFullYear()===anoSel) ocupMes[d.getMonth()]++;
+    }
+  });
+  const diasMes = [31,28,29,31,30,31,30,31,31,30,31,30];
+  const ocupPct = ocupMes.map((d,i)=>Math.min(100,Math.round(d/diasMes[i]*100)));
+
+  // Métricas anuais
+  const totalRec = receitaMes.reduce((a,b)=>a+b,0);
+  const totalGas = gastosMes.reduce((a,b)=>a+b,0);
+  const totalLuc = totalRec - totalGas;
+  const avgOcup = Math.round(ocupPct.reduce((a,b)=>a+b,0)/12);
+  document.getElementById('rel-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Receita ${anoSel}</div><div class="metric-value" style="color:#0F6E56">${euro(totalRec)}</div></div>
+    <div class="metric"><div class="metric-label">Gastos ${anoSel}</div><div class="metric-value" style="color:#A32D2D">${euro(totalGas)}</div></div>
+    <div class="metric"><div class="metric-label">Lucro ${anoSel}</div><div class="metric-value">${euro(totalLuc)}</div></div>
+    <div class="metric"><div class="metric-label">Ocupação média</div><div class="metric-value" style="color:#185FA5">${avgOcup}%</div></div>
+  `;
+
+  // Gastos por categoria
+  const catMap = {};
+  S.expenses.filter(e=>new Date(e.date).getFullYear()===anoSel).forEach(e=>{
+    catMap[e.category] = (catMap[e.category]||0) + parseFloat(e.amount||0);
+  });
+  const catLabels = Object.keys(catMap), catVals = Object.values(catMap);
+
+  // Charts
+  drawBarChart('chart-receita', meses, receitaMes, '#185FA5', 'Receita (€)');
+  drawBarChart('chart-ocup', meses, ocupPct, '#0F6E56', 'Ocupação (%)');
+  drawDoughnut('chart-gastos', catLabels, catVals);
+
+  // Tabela resumo
+  document.getElementById('rel-tabela').innerHTML = `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
+        <th style="text-align:left;padding:6px 4px;color:#888;font-weight:500;">Mês</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Receita</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Gastos</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Lucro</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Ocup.</th>
+      </tr></thead>
+      <tbody>${mesesFull.map((m,i)=>`<tr style="border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <td style="padding:7px 4px;font-weight:500;">${m}</td>
+        <td style="text-align:right;padding:7px 4px;color:#0F6E56;">${receitaMes[i]>0?euro(receitaMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;color:#A32D2D;">${gastosMes[i]>0?euro(gastosMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;font-weight:600;color:${lucroMes[i]>=0?'#0F6E56':'#A32D2D'}">${(receitaMes[i]>0||gastosMes[i]>0)?euro(lucroMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;">${ocupPct[i]>0?ocupPct[i]+'%':'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  `;
+}
+
+function drawBarChart(id, labels, data, color, label) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: color+'33', borderColor: color, borderWidth: 1.5, borderRadius: 4 }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+  });
+}
+
+function drawDoughnut(id, labels, data) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  if (!labels.length) { canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); return; }
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  const colors = ['#185FA5','#0F6E56','#A32D2D','#BA7517','#633806','#27500A','#0C447C','#791F1F'];
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0,labels.length), borderWidth: 0 }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } } }
+  });
+}
+
+// ============ EXPORTAR PDF ============
+function exportPDF() {
+  const anoSel = document.getElementById('rel-ano').value || new Date().getFullYear();
+  const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  
+  const receitaMes = Array(12).fill(0), gastosMes = Array(12).fill(0);
+  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ receitaMes[new Date(b.checkin).getMonth()]+=parseFloat(b.price||0); });
+  S.expenses.filter(e=>new Date(e.date).getFullYear()==anoSel).forEach(e=>{ gastosMes[new Date(e.date).getMonth()]+=parseFloat(e.amount||0); });
+  const totalRec = receitaMes.reduce((a,b)=>a+b,0);
+  const totalGas = gastosMes.reduce((a,b)=>a+b,0);
+
+  const rows = mesesFull.map((m,i) => `<tr style="border-bottom:0.5px solid #eee;">
+    <td style="padding:8px 6px;">${m}</td>
+    <td style="text-align:right;padding:8px 6px;color:#0F6E56;">${receitaMes[i]>0?euro(receitaMes[i]):'—'}</td>
+    <td style="text-align:right;padding:8px 6px;color:#A32D2D;">${gastosMes[i]>0?euro(gastosMes[i]):'—'}</td>
+    <td style="text-align:right;padding:8px 6px;font-weight:600;color:${(receitaMes[i]-gastosMes[i])>=0?'#0F6E56':'#A32D2D'}">${(receitaMes[i]>0||gastosMes[i]>0)?euro(receitaMes[i]-gastosMes[i]):'—'}</td>
+  </tr>`).join('');
+
+  const reservaRows = S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel)
+    .sort((a,b)=>new Date(a.checkin)-new Date(b.checkin))
+    .map(b=>`<tr style="border-bottom:0.5px solid #eee;">
+      <td style="padding:6px;">${b.name}</td>
+      <td style="padding:6px;">${fmt(b.checkin)}</td>
+      <td style="padding:6px;">${fmt(b.checkout)}</td>
+      <td style="padding:6px;">${b.canal}</td>
+      <td style="text-align:right;padding:6px;">${euro(b.price)}</td>
+    </tr>`).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${anoSel} · Valverde Villa</title>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#111;max-width:800px;margin:0 auto;}h1{font-size:24px;margin-bottom:4px;}h2{font-size:16px;margin:28px 0 10px;color:#185FA5;}table{width:100%;border-collapse:collapse;font-size:13px;}th{text-align:left;padding:8px 6px;background:#f5f5f0;font-weight:600;}td{padding:6px;}.total{font-weight:700;background:#f9f9f9;}.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #185FA5;padding-bottom:16px;margin-bottom:24px;}.summ{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}.card{background:#f5f5f0;padding:16px;border-radius:8px;}.card-label{font-size:12px;color:#888;margin-bottom:4px;}.card-val{font-size:22px;font-weight:700;}@media print{button{display:none;}}</style></head>
+  <body>
+  <div class="header"><div><h1>Relatório Anual ${anoSel}</h1><p style="color:#888;font-size:13px;">Valverde Villa · Vilamoura, Algarve</p></div>
+  <button onclick="window.print()" style="padding:10px 20px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#128424; Imprimir / PDF</button></div>
+  <div class="summ">
+    <div class="card"><div class="card-label">Receita total</div><div class="card-val" style="color:#0F6E56">${euro(totalRec)}</div></div>
+    <div class="card"><div class="card-label">Gastos totais</div><div class="card-val" style="color:#A32D2D">${euro(totalGas)}</div></div>
+    <div class="card"><div class="card-label">Lucro líquido</div><div class="card-val" style="color:${totalRec-totalGas>=0?'#0F6E56':'#A32D2D'}">${euro(totalRec-totalGas)}</div></div>
+  </div>
+  <h2>Resumo mensal</h2>
+  <table><thead><tr><th>Mês</th><th style="text-align:right">Receita</th><th style="text-align:right">Gastos</th><th style="text-align:right">Lucro</th></tr></thead>
+  <tbody>${rows}<tr class="total"><td>Total</td><td style="text-align:right;color:#0F6E56">${euro(totalRec)}</td><td style="text-align:right;color:#A32D2D">${euro(totalGas)}</td><td style="text-align:right">${euro(totalRec-totalGas)}</td></tr></tbody></table>
+  <h2>Reservas ${anoSel}</h2>
+  <table><thead><tr><th>Hóspede</th><th>Check-in</th><th>Check-out</th><th>Canal</th><th style="text-align:right">Valor</th></tr></thead>
+  <tbody>${reservaRows}</tbody></table>
+  <p style="margin-top:40px;font-size:11px;color:#aaa;text-align:center;">Gerado por Valverde App · ${new Date().toLocaleDateString('pt-PT')}</p>
+  </body></html>`);
+  win.document.close();
+}
+
+// ============ NOTIFICAÇÕES CHECK-IN/CHECKOUT ============
+function checkNotificacoes() {
+  if (!('Notification' in window)) return;
+  const hoje = new Date();
+  const amanha = new Date(); amanha.setDate(amanha.getDate()+1);
+  const fmtComp = d => d.toISOString().split('T')[0];
+  const hojeStr = fmtComp(hoje), amanhaStr = fmtComp(amanha);
+
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    if (b.checkin === amanhaStr) notify('Check-in amanhã', b.name + ' · ' + fmt(b.checkin));
+    if (b.checkout === amanhaStr) notify('Check-out amanhã', b.name + ' · ' + fmt(b.checkout));
+    if (b.checkin === hojeStr) notify('Check-in HOJE', b.name + ' · ' + fmt(b.checkin));
+  });
+}
+function notify(title, body) {
+  if (Notification.permission === 'granted') {
+    new Notification('🏡 Valverde Villa — ' + title, { body, icon: '/ValverdeAPP/icon.png' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => { if(p==='granted') new Notification('🏡 Valverde Villa — ' + title, { body }); });
+  }
+}
+function pedirNotificacoes() {
+  if (!('Notification' in window)) { alert('O teu browser não suporta notificações.'); return; }
+  Notification.requestPermission().then(p => {
+    if (p==='granted') { alert('✅ Notificações activadas! Vais receber alertas de check-in e check-out.'); checkNotificacoes(); }
+    else alert('Notificações bloqueadas. Activa nas definições do browser.');
+  });
+}
+
+function renderAll() {
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-title').textContent = meses[calMonth]+' '+calYear;
+  renderCalGrid();
+  renderDash();
+  renderReservas();
+  renderGastos();
+  renderHospedes();
+}
 
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
@@ -491,6 +973,7 @@ function calNav(dir) {
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   document.getElementById('cal-title').textContent = meses[calMonth]+' '+calYear;
   renderCalGrid();
+  renderDash();
 }
 
 function renderCalGrid() {
@@ -574,19 +1057,33 @@ function showCalDetail(day) {
 }
 
 function renderDash() {
-  const now=new Date(), m=now.getMonth(), y=now.getFullYear();
+  const now=new Date();
+  const m=calMonth, y=calYear;
+  const meses2=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  // Month metrics
   const mB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getMonth()===m&&d.getFullYear()===y&&b.status!=='Cancelada'; });
   const rec=mB.reduce((s,b)=>s+parseFloat(b.price||0),0);
   const mE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getMonth()===m&&d.getFullYear()===y; });
   const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
   const por=S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada').reduce((s,b)=>s+parseFloat(b.price||0),0);
+  // Annual metrics
+  const yB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getFullYear()===y&&b.status!=='Cancelada'; });
+  const recAno=yB.reduce((s,b)=>s+parseFloat(b.price||0),0);
+  const yE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getFullYear()===y; });
+  const gasAno=yE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  // Update labels with month name
+  ['d-receita-label','d-gastos-label','d-lucro-label'].forEach(id=>{
+    const labels=['Receita','Gastos','Lucro'];
+    const idx=['d-receita-label','d-gastos-label','d-lucro-label'].indexOf(id);
+    document.getElementById(id).textContent=labels[idx]+' · '+meses2[m];
+  });
   document.getElementById('d-receita').textContent=euro(rec);
   document.getElementById('d-gastos').textContent=euro(gas);
   document.getElementById('d-lucro').textContent=euro(rec-gas);
   document.getElementById('d-porreceber').textContent=euro(por);
-  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  document.getElementById('cal-title').textContent=meses[calMonth]+' '+calYear;
-  renderCalGrid();
+  document.getElementById('d-receita-ano').textContent=euro(recAno);
+  document.getElementById('d-gastos-ano').textContent=euro(gasAno);
+  document.getElementById('d-lucro-ano').textContent=euro(recAno-gasAno);
   const prox=S.bookings.filter(b=>{ const ci=new Date(b.checkin),df=(ci-now)/86400000; return df>=0&&df<=14&&b.status!=='Cancelada'; }).sort((a,b)=>new Date(a.checkin)-new Date(b.checkin));
   document.getElementById('d-proximas').innerHTML=prox.length?prox.map(b=>`<div class="booking-item" onclick="switchTab('reservas',document.querySelectorAll('.navbtn')[1]);openBD(${S.bookings.indexOf(b)})"><div><div class="booking-name">${b.name}</div><div class="booking-dates">Check-in: ${fmt(b.checkin)}</div></div><div class="booking-right"><div class="booking-price">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}">${b.status}</span></div></div>`).join(''):'<div class="empty-state">Sem chegadas nos próximos 14 dias</div>';
 }
@@ -611,12 +1108,13 @@ function renderGastos() {
   const ri = S.expenses.indexOf(e);
   const pago = e.pago !== false;
   const pagBadge = pago ? '<span class="badge badge-pago">Pago</span>' : '<span class="badge badge-nao-pago">Por pagar</span>';
+  const datapagStr = (pago && e.datapag) ? ' · pago em ' + fmt(e.datapag) : '';
   return `<div class="expense-item">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <div style="font-size:14px;font-weight:600;color:#111">${e.desc||e.category}</div>${pagBadge}
       </div>
-      <div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}</div>
+      <div class="expense-cat">${e.category} · ${fmt(e.date)}${e.paidto?' · '+e.paidto:''}${datapagStr}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px;">
       <div class="expense-amount">–${euro(e.amount)}</div>
@@ -656,6 +1154,11 @@ function openBD(i) {
   document.getElementById('det-workflow').innerHTML=statuses.map(s=>`<button class="wf-btn${s===b.status?' active':''}" onclick="changeStatus(${i},'${s}',this)">${s}</button>`).join('')+'<button class="wf-btn cancel" onclick="changeStatus('+i+',\'Cancelada\',this)">Cancelar</button>';
   const gRes=S.expenses.filter(e=>e.bookingId===b.id);
   document.getElementById('det-gastos').innerHTML=gRes.length?gRes.map(e=>`<div class="expense-item"><div><div style="font-size:14px;font-weight:600">${e.desc||e.category}</div><div class="expense-cat">${e.category}${e.paidto?' · '+e.paidto:''}</div></div><div class="expense-amount">–${euro(e.amount)}</div></div>`).join(''):'<div style="font-size:13px;color:#888">Sem gastos associados.</div>';
+  renderWAButtons(b);
+  document.getElementById('det-notas').value = b.notas || '';
+  renderPedidos(b);
+  renderChecklist(b);
+  renderDeposito(b);
   document.getElementById('reservas-list').style.display='none';
   document.getElementById('booking-detail').classList.add('open');
 }
@@ -746,9 +1249,9 @@ function switchTab(tab,btn) {
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   btn.classList.add('active'); curTab=tab;
-  document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes'}[tab];
-
-  document.getElementById('fab-btn').style.display=tab==='dashboard'?'none':'flex';
+  document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes',relatorios:'Relatórios'}[tab];
+  document.getElementById('fab-btn').style.display=(tab==='dashboard'||tab==='relatorios')?'none':'flex';
+  if(tab==='relatorios') setTimeout(renderRelatorios, 50);
   closeBookingDetail(); closeGuestDetail();
 }
 
@@ -929,6 +1432,13 @@ function saveReserva() {
 }
 
 let editGastoIdx = null;
+
+function toggleDataPag() {
+  const pago = document.getElementById("g-pago").value === "1";
+  const grp = document.getElementById("g-datapag-group");
+  if (grp) grp.style.display = pago ? "block" : "none";
+}
+
 function saveGasto() {
   const amt=document.getElementById('g-amount').value; if(!amt){alert('Por favor preenche o valor.');return;}
   const obj = {
@@ -939,7 +1449,8 @@ function saveGasto() {
     desc:document.getElementById('g-desc').value,
     paidto:document.getElementById('g-paidto').value,
     bookingId:document.getElementById('g-reserva').value,
-    pago: document.getElementById('g-pago').value === '1'
+    pago: document.getElementById('g-pago').value === '1',
+    datapag: document.getElementById('g-pago').value === '1' ? document.getElementById('g-datapag').value : ''
   };
   if (editGastoIdx !== null) { S.expenses[editGastoIdx] = obj; editGastoIdx = null; }
   else S.expenses.push(obj);
@@ -960,6 +1471,8 @@ function editGasto(i) {
   document.getElementById('g-paidto').value = e.paidto||'';
   document.getElementById('g-reserva').value = e.bookingId||'';
   document.getElementById('g-pago').value = e.pago !== false ? '1' : '0';
+  document.getElementById('g-datapag').value = e.datapag||'';
+  toggleDataPag();
   document.getElementById('g-save-btn').textContent = 'Actualizar gasto';
   openModal('m-gasto');
 }
