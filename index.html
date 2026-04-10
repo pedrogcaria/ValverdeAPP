@@ -11,12 +11,12 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 body { background: #f5f5f0; }
-.app { width: 100%; max-width: 430px; margin: 0 auto; background: #f5f5f0; min-height: 100vh; position: relative; display: flex; flex-direction: column; }
+.app { width: 100%; max-width: 430px; margin: 0 auto; background: #f5f5f0; min-height: 100vh; position: relative; display: flex; flex-direction: column; } @media (min-width: 500px) { body { background: #e8e8e3; } .app { box-shadow: 0 0 40px rgba(0,0,0,0.1); } .fab { right: calc(50% - 215px + 16px) !important; } }
 .topbar { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
 .topbar h1 { font-size: 20px; font-weight: 600; color: #111; }
 .topbar p { font-size: 12px; color: #888; margin-top: 2px; }
 .logo-badge { background: #185FA5; color: #fff; font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 20px; letter-spacing: 0.03em; }
-.screen { padding: 16px 16px 90px; display: none; min-height: 0; }
+.screen { padding: 16px 16px 90px; display: none; min-height: 0; overflow-y: auto; }
 .screen.active { display: block; }
 .bottomnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 0.5px solid rgba(0,0,0,0.1); display: flex; height: 68px; padding-bottom: env(safe-area-inset-bottom); z-index: 10; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 .navbtn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: none; font-size: 10px; color: #999; padding: 0; }
@@ -112,6 +112,7 @@ body { background: #f5f5f0; }
 .comissao-val { font-size: 12px; font-weight: 600; color: #111; }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -124,7 +125,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.2 · 09/04</span>
+        <span style="font-size:9px;color:#888;white-space:nowrap;">v2.3 · 10/04</span>
       </div>
     </div>
   </div>
@@ -314,11 +315,42 @@ body { background: #f5f5f0; }
   </div>
 
   <div class="saving" id="saving">A guardar...</div>
+  <!-- RELATÓRIOS -->
+  <div class="screen" id="screen-relatorios">
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="rel-ano" onchange="renderRelatorios()" style="padding:8px 12px;border:0.5px solid rgba(0,0,0,0.2);border-radius:10px;font-size:14px;background:#fff;"></select>
+      <button onclick="exportPDF()" style="padding:8px 16px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">&#128196; Exportar PDF</button>
+    </div>
+    <!-- Métricas anuais -->
+    <div class="metrics" id="rel-metrics"></div>
+    <!-- Receita mensal -->
+    <div class="card">
+      <div class="section-title">Receita mensal</div>
+      <canvas id="chart-receita" height="160"></canvas>
+    </div>
+    <!-- Gastos por categoria -->
+    <div class="card">
+      <div class="section-title">Gastos por categoria</div>
+      <canvas id="chart-gastos" height="160"></canvas>
+    </div>
+    <!-- Taxa de ocupação -->
+    <div class="card">
+      <div class="section-title">Taxa de ocupação mensal (%)</div>
+      <canvas id="chart-ocup" height="140"></canvas>
+    </div>
+    <!-- Resumo anual tabela -->
+    <div class="card">
+      <div class="section-title">Resumo por mês</div>
+      <div id="rel-tabela"></div>
+    </div>
+  </div>
+
   <div class="bottomnav">
     <button class="navbtn active" onclick="switchTab('dashboard',this)"><span class="navicon">&#9636;</span><span>Dashboard</span></button>
     <button class="navbtn" onclick="switchTab('reservas',this)"><span class="navicon">&#128197;</span><span>Reservas</span></button>
     <button class="navbtn" onclick="switchTab('gastos',this)"><span class="navicon">&#128176;</span><span>Gastos</span></button>
     <button class="navbtn" onclick="switchTab('hospedes',this)"><span class="navicon">&#128101;</span><span>Hóspedes</span></button>
+    <button class="navbtn" onclick="switchTab('relatorios',this)"><span class="navicon">&#128202;</span><span>Relatórios</span></button>
   </div>
 
   <button class="fab" id="fab-btn" onclick="openFab()">+</button>
@@ -482,6 +514,7 @@ function saveSetup() {
   localStorage.removeItem('vv_local');
   document.getElementById('setup-status').textContent = 'A sincronizar...';
   loadData(true).then(() => {
+    setTimeout(checkNotificacoes, 2000);
     document.getElementById('setup-status').textContent = '✓ Ligado ao Google Sheets!';
     setTimeout(() => closeModal('m-setup'), 1000);
   });
@@ -721,6 +754,203 @@ function saveEditReserva() {
   document.getElementById('m-reserva-title').textContent = 'Nova reserva';
   document.querySelector('#m-reserva .btn-primary').onclick = saveReserva;
   openBD(curBookingIdx);
+}
+
+// ============ RELATÓRIOS ============
+function renderRelatorios() {
+  const now = new Date();
+  const anoSel = parseInt(document.getElementById('rel-ano').value) || now.getFullYear();
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // Preencher anos disponíveis
+  const anos = [...new Set(S.bookings.map(b => new Date(b.checkin).getFullYear()))];
+  if (!anos.includes(now.getFullYear())) anos.push(now.getFullYear());
+  anos.sort((a,b)=>b-a);
+  const sel = document.getElementById('rel-ano');
+  if (sel.options.length === 0) {
+    anos.forEach(a => { const o = document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); });
+    sel.value = anoSel;
+  }
+
+  // Dados mensais
+  const receitaMes = Array(12).fill(0);
+  const lucroMes = Array(12).fill(0);
+  const gastosMes = Array(12).fill(0);
+  const ocupMes = Array(12).fill(0);
+
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    const ci = new Date(b.checkin);
+    if (ci.getFullYear() !== anoSel) return;
+    const m = ci.getMonth();
+    receitaMes[m] += parseFloat(b.price||0);
+  });
+  S.expenses.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getFullYear() !== anoSel) return;
+    gastosMes[d.getMonth()] += parseFloat(e.amount||0);
+  });
+  for(let m=0;m<12;m++) lucroMes[m] = receitaMes[m] - gastosMes[m];
+
+  // Taxa de ocupação
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    const ci = new Date(b.checkin), co = new Date(b.checkout);
+    for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)) {
+      if (d.getFullYear()===anoSel) ocupMes[d.getMonth()]++;
+    }
+  });
+  const diasMes = [31,28,29,31,30,31,30,31,31,30,31,30];
+  const ocupPct = ocupMes.map((d,i)=>Math.min(100,Math.round(d/diasMes[i]*100)));
+
+  // Métricas anuais
+  const totalRec = receitaMes.reduce((a,b)=>a+b,0);
+  const totalGas = gastosMes.reduce((a,b)=>a+b,0);
+  const totalLuc = totalRec - totalGas;
+  const avgOcup = Math.round(ocupPct.reduce((a,b)=>a+b,0)/12);
+  document.getElementById('rel-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Receita ${anoSel}</div><div class="metric-value" style="color:#0F6E56">${euro(totalRec)}</div></div>
+    <div class="metric"><div class="metric-label">Gastos ${anoSel}</div><div class="metric-value" style="color:#A32D2D">${euro(totalGas)}</div></div>
+    <div class="metric"><div class="metric-label">Lucro ${anoSel}</div><div class="metric-value">${euro(totalLuc)}</div></div>
+    <div class="metric"><div class="metric-label">Ocupação média</div><div class="metric-value" style="color:#185FA5">${avgOcup}%</div></div>
+  `;
+
+  // Gastos por categoria
+  const catMap = {};
+  S.expenses.filter(e=>new Date(e.date).getFullYear()===anoSel).forEach(e=>{
+    catMap[e.category] = (catMap[e.category]||0) + parseFloat(e.amount||0);
+  });
+  const catLabels = Object.keys(catMap), catVals = Object.values(catMap);
+
+  // Charts
+  drawBarChart('chart-receita', meses, receitaMes, '#185FA5', 'Receita (€)');
+  drawBarChart('chart-ocup', meses, ocupPct, '#0F6E56', 'Ocupação (%)');
+  drawDoughnut('chart-gastos', catLabels, catVals);
+
+  // Tabela resumo
+  document.getElementById('rel-tabela').innerHTML = `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
+        <th style="text-align:left;padding:6px 4px;color:#888;font-weight:500;">Mês</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Receita</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Gastos</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Lucro</th>
+        <th style="text-align:right;padding:6px 4px;color:#888;font-weight:500;">Ocup.</th>
+      </tr></thead>
+      <tbody>${mesesFull.map((m,i)=>`<tr style="border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <td style="padding:7px 4px;font-weight:500;">${m}</td>
+        <td style="text-align:right;padding:7px 4px;color:#0F6E56;">${receitaMes[i]>0?euro(receitaMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;color:#A32D2D;">${gastosMes[i]>0?euro(gastosMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;font-weight:600;color:${lucroMes[i]>=0?'#0F6E56':'#A32D2D'}">${(receitaMes[i]>0||gastosMes[i]>0)?euro(lucroMes[i]):'—'}</td>
+        <td style="text-align:right;padding:7px 4px;">${ocupPct[i]>0?ocupPct[i]+'%':'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  `;
+}
+
+function drawBarChart(id, labels, data, color, label) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: color+'33', borderColor: color, borderWidth: 1.5, borderRadius: 4 }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+  });
+}
+
+function drawDoughnut(id, labels, data) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  if (!labels.length) { canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); return; }
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  const colors = ['#185FA5','#0F6E56','#A32D2D','#BA7517','#633806','#27500A','#0C447C','#791F1F'];
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors.slice(0,labels.length), borderWidth: 0 }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8 } } } }
+  });
+}
+
+// ============ EXPORTAR PDF ============
+function exportPDF() {
+  const anoSel = document.getElementById('rel-ano').value || new Date().getFullYear();
+  const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  
+  const receitaMes = Array(12).fill(0), gastosMes = Array(12).fill(0);
+  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ receitaMes[new Date(b.checkin).getMonth()]+=parseFloat(b.price||0); });
+  S.expenses.filter(e=>new Date(e.date).getFullYear()==anoSel).forEach(e=>{ gastosMes[new Date(e.date).getMonth()]+=parseFloat(e.amount||0); });
+  const totalRec = receitaMes.reduce((a,b)=>a+b,0);
+  const totalGas = gastosMes.reduce((a,b)=>a+b,0);
+
+  const rows = mesesFull.map((m,i) => `<tr style="border-bottom:0.5px solid #eee;">
+    <td style="padding:8px 6px;">${m}</td>
+    <td style="text-align:right;padding:8px 6px;color:#0F6E56;">${receitaMes[i]>0?euro(receitaMes[i]):'—'}</td>
+    <td style="text-align:right;padding:8px 6px;color:#A32D2D;">${gastosMes[i]>0?euro(gastosMes[i]):'—'}</td>
+    <td style="text-align:right;padding:8px 6px;font-weight:600;color:${(receitaMes[i]-gastosMes[i])>=0?'#0F6E56':'#A32D2D'}">${(receitaMes[i]>0||gastosMes[i]>0)?euro(receitaMes[i]-gastosMes[i]):'—'}</td>
+  </tr>`).join('');
+
+  const reservaRows = S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel)
+    .sort((a,b)=>new Date(a.checkin)-new Date(b.checkin))
+    .map(b=>`<tr style="border-bottom:0.5px solid #eee;">
+      <td style="padding:6px;">${b.name}</td>
+      <td style="padding:6px;">${fmt(b.checkin)}</td>
+      <td style="padding:6px;">${fmt(b.checkout)}</td>
+      <td style="padding:6px;">${b.canal}</td>
+      <td style="text-align:right;padding:6px;">${euro(b.price)}</td>
+    </tr>`).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${anoSel} · Valverde Villa</title>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#111;max-width:800px;margin:0 auto;}h1{font-size:24px;margin-bottom:4px;}h2{font-size:16px;margin:28px 0 10px;color:#185FA5;}table{width:100%;border-collapse:collapse;font-size:13px;}th{text-align:left;padding:8px 6px;background:#f5f5f0;font-weight:600;}td{padding:6px;}.total{font-weight:700;background:#f9f9f9;}.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #185FA5;padding-bottom:16px;margin-bottom:24px;}.summ{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}.card{background:#f5f5f0;padding:16px;border-radius:8px;}.card-label{font-size:12px;color:#888;margin-bottom:4px;}.card-val{font-size:22px;font-weight:700;}@media print{button{display:none;}}</style></head>
+  <body>
+  <div class="header"><div><h1>Relatório Anual ${anoSel}</h1><p style="color:#888;font-size:13px;">Valverde Villa · Vilamoura, Algarve</p></div>
+  <button onclick="window.print()" style="padding:10px 20px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">&#128424; Imprimir / PDF</button></div>
+  <div class="summ">
+    <div class="card"><div class="card-label">Receita total</div><div class="card-val" style="color:#0F6E56">${euro(totalRec)}</div></div>
+    <div class="card"><div class="card-label">Gastos totais</div><div class="card-val" style="color:#A32D2D">${euro(totalGas)}</div></div>
+    <div class="card"><div class="card-label">Lucro líquido</div><div class="card-val" style="color:${totalRec-totalGas>=0?'#0F6E56':'#A32D2D'}">${euro(totalRec-totalGas)}</div></div>
+  </div>
+  <h2>Resumo mensal</h2>
+  <table><thead><tr><th>Mês</th><th style="text-align:right">Receita</th><th style="text-align:right">Gastos</th><th style="text-align:right">Lucro</th></tr></thead>
+  <tbody>${rows}<tr class="total"><td>Total</td><td style="text-align:right;color:#0F6E56">${euro(totalRec)}</td><td style="text-align:right;color:#A32D2D">${euro(totalGas)}</td><td style="text-align:right">${euro(totalRec-totalGas)}</td></tr></tbody></table>
+  <h2>Reservas ${anoSel}</h2>
+  <table><thead><tr><th>Hóspede</th><th>Check-in</th><th>Check-out</th><th>Canal</th><th style="text-align:right">Valor</th></tr></thead>
+  <tbody>${reservaRows}</tbody></table>
+  <p style="margin-top:40px;font-size:11px;color:#aaa;text-align:center;">Gerado por Valverde App · ${new Date().toLocaleDateString('pt-PT')}</p>
+  </body></html>`);
+  win.document.close();
+}
+
+// ============ NOTIFICAÇÕES CHECK-IN/CHECKOUT ============
+function checkNotificacoes() {
+  if (!('Notification' in window)) return;
+  const hoje = new Date();
+  const amanha = new Date(); amanha.setDate(amanha.getDate()+1);
+  const fmtComp = d => d.toISOString().split('T')[0];
+  const hojeStr = fmtComp(hoje), amanhaStr = fmtComp(amanha);
+
+  S.bookings.filter(b=>b.status!=='Cancelada').forEach(b => {
+    if (b.checkin === amanhaStr) notify('Check-in amanhã', b.name + ' · ' + fmt(b.checkin));
+    if (b.checkout === amanhaStr) notify('Check-out amanhã', b.name + ' · ' + fmt(b.checkout));
+    if (b.checkin === hojeStr) notify('Check-in HOJE', b.name + ' · ' + fmt(b.checkin));
+  });
+}
+function notify(title, body) {
+  if (Notification.permission === 'granted') {
+    new Notification('🏡 Valverde Villa — ' + title, { body, icon: '/ValverdeAPP/icon.png' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => { if(p==='granted') new Notification('🏡 Valverde Villa — ' + title, { body }); });
+  }
+}
+function pedirNotificacoes() {
+  if (!('Notification' in window)) { alert('O teu browser não suporta notificações.'); return; }
+  Notification.requestPermission().then(p => {
+    if (p==='granted') { alert('✅ Notificações activadas! Vais receber alertas de check-in e check-out.'); checkNotificacoes(); }
+    else alert('Notificações bloqueadas. Activa nas definições do browser.');
+  });
 }
 
 function renderAll() {
@@ -1019,9 +1249,9 @@ function switchTab(tab,btn) {
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   btn.classList.add('active'); curTab=tab;
-  document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes'}[tab];
-
-  document.getElementById('fab-btn').style.display=tab==='dashboard'?'none':'flex';
+  document.getElementById('topbar-title').textContent={dashboard:'Valverde',reservas:'Reservas',gastos:'Gastos',hospedes:'Hóspedes',relatorios:'Relatórios'}[tab];
+  document.getElementById('fab-btn').style.display=(tab==='dashboard'||tab==='relatorios')?'none':'flex';
+  if(tab==='relatorios') setTimeout(renderRelatorios, 50);
   closeBookingDetail(); closeGuestDetail();
 }
 
