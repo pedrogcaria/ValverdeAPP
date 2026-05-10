@@ -625,6 +625,31 @@ function openSetup() {
   openModal('m-setup');
 }
 
+function loadViaIframe(url) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timeout')), 12000);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    iframe.onload = function() {
+      try {
+        const txt = iframe.contentDocument ? iframe.contentDocument.body.innerText : '';
+        clearTimeout(timeout);
+        iframe.remove();
+        if (!txt) { reject(new Error('Resposta vazia')); return; }
+        const d = JSON.parse(txt);
+        resolve(d);
+      } catch(e) {
+        clearTimeout(timeout);
+        iframe.remove();
+        reject(new Error('Parse error: ' + e.message));
+      }
+    };
+    iframe.onerror = () => { clearTimeout(timeout); iframe.remove(); reject(new Error('iframe load error')); };
+    document.body.appendChild(iframe);
+  });
+}
+
 function loadViaJsonp(url) {
   return new Promise((resolve, reject) => {
     const cbName = 'vv_cb_' + Date.now();
@@ -632,8 +657,9 @@ function loadViaJsonp(url) {
     const timeout = setTimeout(() => {
       delete window[cbName];
       script.remove();
-      reject(new Error('Timeout'));
-    }, 10000);
+      // fallback para iframe
+      loadViaIframe(url.split('&callback=')[0]).then(resolve).catch(reject);
+    }, 5000);
     window[cbName] = function(data) {
       clearTimeout(timeout);
       delete window[cbName];
@@ -641,7 +667,13 @@ function loadViaJsonp(url) {
       resolve(data);
     };
     script.src = url + '&callback=' + cbName;
-    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; script.remove(); reject(new Error('Script load error')); };
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      // fallback para iframe
+      loadViaIframe(url.split('&callback=')[0]).then(resolve).catch(reject);
+    };
     document.head.appendChild(script);
   });
 }
