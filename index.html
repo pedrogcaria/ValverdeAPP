@@ -477,18 +477,28 @@ body { background: #f5f5f0; }
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>&#9881;&#65039; Configurações</h2>
-      <div style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.4 · 06 Maio 2026</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.4 · 10 Maio 2026</div>
       <div class="info-banner">
         <p>Cola aqui o URL do Google Apps Script para sincronizar dados entre telemóvel e PC.</p>
       </div>
       <div class="form-group">
-        <label class="form-label">URL do Google Apps Script</label>
+        <label class="form-label">URL atual do Google Apps Script</label>
         <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/.../exec" />
       </div>
       <div id="setup-status" style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5;"></div>
       <div id="setup-diag" style="display:none;background:#f5f5f0;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#555;font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;max-height:140px;overflow-y:auto;"></div>
       <button class="btn-primary" onclick="saveSetup()">Guardar e sincronizar</button>
       <button onclick="testLigacao()" style="width:100%;padding:12px;background:#f5f5f0;color:#185FA5;border:0.5px solid #185FA5;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;">🔍 Testar ligação</button>
+      <!-- Migração para novo URL -->
+      <div style="margin-top:16px;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:14px;">
+        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">Migrar para novo deployment</div>
+        <div style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5;">Cola o URL novo aqui — os dados são copiados do URL atual para o novo antes de mudar.</div>
+        <div class="form-group" style="margin-bottom:6px;">
+          <input type="text" id="migrate-url" placeholder="Novo URL do Apps Script" />
+        </div>
+        <div id="migrate-status" style="font-size:12px;color:#888;margin-bottom:6px;line-height:1.5;"></div>
+        <button onclick="migrarDados()" style="width:100%;padding:12px;background:#EAF3DE;color:#27500A;border:0.5px solid #97C459;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">📦 Migrar dados para novo URL</button>
+      </div>
       <button class="btn-secondary" onclick="closeModal('m-setup')">Fechar</button>
     </div>
   </div>
@@ -554,7 +564,56 @@ function saveSetup() {
     }
   });
 }
-function useLocal() { LOCAL=true; localStorage.setItem('vv_local','1'); closeModal('m-setup'); loadLocal(); renderAll(); }
+async function migrarDados() {
+  const novoUrl = document.getElementById('migrate-url').value.trim();
+  const st = document.getElementById('migrate-status');
+  if (!novoUrl) { st.textContent = 'Cola o novo URL primeiro.'; st.style.color = '#A32D2D'; return; }
+  if (!SCRIPT_URL) { st.textContent = 'Sem URL atual configurado.'; st.style.color = '#A32D2D'; return; }
+
+  st.textContent = '1/3 A ler dados do URL atual...'; st.style.color = '#185FA5';
+  try {
+    // Passo 1: ler dados do URL atual via JSONP
+    const dados = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
+    if (!dados || dados.bookings === undefined) throw new Error('Dados inválidos no URL atual');
+    st.textContent = `2/3 Lidos ${dados.bookings.length} reservas, ${dados.expenses?.length||0} gastos, ${dados.guests?.length||0} hóspedes. A gravar no novo URL...`; st.style.color = '#185FA5';
+
+    // Passo 2: gravar no novo URL via GET no-cors
+    await fetch(novoUrl + '?action=saveAll&data=' + encodeURIComponent(JSON.stringify(dados)), {
+      method: 'GET', mode: 'no-cors'
+    });
+
+    // Aguardar propagação
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Passo 3: verificar se gravou
+    st.textContent = '3/3 A verificar...'; st.style.color = '#185FA5';
+    const verificacao = await loadViaJsonp(novoUrl + '?action=getAll');
+    if (!verificacao || verificacao.bookings === undefined) throw new Error('Verificação falhou');
+
+    if (verificacao.bookings.length === dados.bookings.length) {
+      // Sucesso — mudar para o novo URL
+      SCRIPT_URL = novoUrl;
+      localStorage.setItem('vv_script', novoUrl);
+      S = verificacao;
+      localStorage.setItem('vv_data', JSON.stringify(S));
+      renderAll();
+      document.getElementById('setup-url').value = novoUrl;
+      st.textContent = `✓ Migração completa! ${verificacao.bookings.length} reservas migradas. URL atualizado.`;
+      st.style.color = '#0F6E56';
+      document.getElementById('setup-status').textContent = '✓ Ligado ao novo URL';
+      document.getElementById('setup-status').style.color = '#0F6E56';
+    } else {
+      st.textContent = `⚠ Gravou mas só ${verificacao.bookings.length} de ${dados.bookings.length} reservas. Tenta de novo.`;
+      st.style.color = '#A32D2D';
+    }
+  } catch(e) {
+    st.textContent = '✗ Erro: ' + e.message;
+    st.style.color = '#A32D2D';
+    console.error('migrarDados erro:', e);
+  }
+}
+
+
 
 function openSetup() {
   const el = document.getElementById('setup-url');
