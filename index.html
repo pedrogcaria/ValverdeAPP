@@ -613,10 +613,12 @@ async function persist() {
     savingEl.style.background = '#185FA5';
     savingEl.className = 'saving show';
     try {
+      // Usar URL-encoded form data para evitar CORS preflight no GitHub Pages
+      const payload = 'action=saveAll&data=' + encodeURIComponent(JSON.stringify(S));
       const r = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'saveAll', data: S })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload
       });
       const txt = await r.text();
       let ok = false;
@@ -1390,7 +1392,8 @@ function handlePhoto(input) {
     try {
       const resp = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'analyzePhoto', imageData: base64, mediaType: mediaType })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=analyzePhoto&imageData=' + encodeURIComponent(base64) + '&mediaType=' + encodeURIComponent(mediaType)
       });
       const text = await resp.text();
       console.log('Apps Script response:', text);
