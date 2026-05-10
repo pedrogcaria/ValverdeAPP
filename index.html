@@ -594,9 +594,18 @@ async function loadData(autoSync) {
     try {
       const d = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
       if (d && d.bookings !== undefined) {
-        S = d;
-        localStorage.setItem('vv_data', JSON.stringify(S));
-        renderAll();
+        // Só substitui dados locais se o servidor tiver dados, ou se local também estiver vazio
+        const localEmpty = S.bookings.length === 0 && S.expenses.length === 0 && S.guests.length === 0;
+        const serverEmpty = d.bookings.length === 0 && d.expenses.length === 0 && (d.guests||[]).length === 0;
+        if (!serverEmpty || localEmpty) {
+          S = d;
+          localStorage.setItem('vv_data', JSON.stringify(S));
+          renderAll();
+        } else {
+          // Servidor vazio mas local tem dados — grava local no servidor
+          console.warn('Servidor vazio mas local tem dados — a sincronizar local → servidor');
+          persist();
+        }
         if (autoSync) {
           const st = document.getElementById('setup-status');
           if (st) { st.textContent = '✓ Ligado e sincronizado! ' + d.bookings.length + ' reservas'; st.style.color = '#0F6E56'; }
