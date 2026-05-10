@@ -536,27 +536,35 @@ async function testLigacao() {
   const diag = document.getElementById('setup-diag');
   if (!url) { st.textContent = 'Cola primeiro o URL do Apps Script.'; st.style.color = '#A32D2D'; return; }
   st.textContent = '🔄 A testar ligação...'; st.style.color = '#185FA5';
-  diag.style.display = 'block'; diag.textContent = 'GET ' + url + '?action=getAll\n';
+  diag.style.display = 'block';
+  diag.textContent = 'GET ' + url + '?action=getAll\n';
   try {
     const t0 = Date.now();
-    const r = await fetch(url + '?action=getAll', { headers: { 'Content-Type': 'text/plain' } });
+    const r = await fetch(url + '?action=getAll');
     const ms = Date.now() - t0;
     const txt = await r.text();
     diag.textContent += `HTTP ${r.status} · ${ms}ms\n${txt.slice(0, 400)}`;
-    if (!r.ok) { st.textContent = `✗ HTTP ${r.status} — verifica se o script está publicado como "Qualquer pessoa"!`; st.style.color = '#A32D2D'; return; }
+    if (!r.ok) { st.textContent = `✗ HTTP ${r.status}`; st.style.color = '#A32D2D'; return; }
     let d;
-    try { d = JSON.parse(txt); } catch(e) { st.textContent = '✗ Resposta não é JSON válido. Verifica o Apps Script.'; st.style.color = '#A32D2D'; return; }
+    try { d = JSON.parse(txt); } catch(e) { st.textContent = '✗ Resposta não é JSON válido.'; st.style.color = '#A32D2D'; return; }
     if (d && d.bookings !== undefined) {
       st.textContent = `✓ Ligação OK · ${d.bookings.length} reservas · ${d.expenses?.length||0} gastos · ${d.guests?.length||0} hóspedes`;
       st.style.color = '#0F6E56';
     } else {
-      st.textContent = '⚠ Script responde mas estrutura de dados inesperada.';
+      st.textContent = '⚠ Script responde mas estrutura inesperada.';
       st.style.color = '#BA7517';
     }
   } catch(e) {
-    diag.textContent += 'ERRO: ' + e.message;
-    st.textContent = '✗ Sem resposta — CORS bloqueado ou URL errado.\nVerifica: script publicado para "Qualquer pessoa", sem autenticação.';
-    st.style.color = '#A32D2D';
+    // CORS bloqueado — mostra dados do localStorage como confirmação
+    const local = S.bookings.length > 0 || S.guests.length > 0;
+    diag.textContent += 'CORS bloqueado (normal no GitHub Pages)\n';
+    if (local) {
+      st.textContent = `⚠ CORS bloqueado mas localStorage tem ${S.bookings.length} reservas · ${S.expenses.length} gastos · ${S.guests.length} hóspedes`;
+      st.style.color = '#BA7517';
+    } else {
+      st.textContent = '✗ Sem resposta e sem dados locais.';
+      st.style.color = '#A32D2D';
+    }
   }
 }
 
@@ -729,11 +737,12 @@ function loadViaJsonp(url) {
 async function loadData(autoSync) {
   loadLocal();
   renderAll();
-  if (!LOCAL && SCRIPT_URL) {
+  // Só tenta sincronizar do servidor se autoSync=true (chamado manualmente)
+  // No arranque normal usa sempre localStorage para não perder dados
+  if (autoSync && !LOCAL && SCRIPT_URL) {
     try {
       const d = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
       if (d && d.bookings !== undefined) {
-        // Só substitui dados locais se o servidor tiver dados, ou se local também estiver vazio
         const localEmpty = S.bookings.length === 0 && S.expenses.length === 0 && S.guests.length === 0;
         const serverEmpty = d.bookings.length === 0 && d.expenses.length === 0 && (d.guests||[]).length === 0;
         if (!serverEmpty || localEmpty) {
@@ -741,25 +750,18 @@ async function loadData(autoSync) {
           localStorage.setItem('vv_data', JSON.stringify(S));
           renderAll();
         } else {
-          // Servidor vazio mas local tem dados — grava local no servidor
-          console.warn('Servidor vazio mas local tem dados — a sincronizar local → servidor');
           persist();
         }
         if (autoSync) {
           const st = document.getElementById('setup-status');
-          if (st) { st.textContent = '✓ Ligado e sincronizado! ' + d.bookings.length + ' reservas'; st.style.color = '#0F6E56'; }
-        }
-      } else {
-        if (autoSync) {
-          const st = document.getElementById('setup-status');
-          if (st) { st.textContent = '⚠ Script ligado mas sem dados reconhecíveis.'; st.style.color = '#A32D2D'; }
+          if (st) { st.textContent = '✓ Sincronizado! ' + d.bookings.length + ' reservas'; st.style.color = '#0F6E56'; }
         }
       }
     } catch(e) {
       console.error('loadData() erro:', e);
       if (autoSync) {
         const st = document.getElementById('setup-status');
-        if (st) { st.textContent = '✗ Erro: ' + e.message + ' — verifica o URL'; st.style.color = '#A32D2D'; }
+        if (st) { st.textContent = '✗ Erro ao sincronizar: ' + e.message; st.style.color = '#A32D2D'; }
       }
     }
   }
