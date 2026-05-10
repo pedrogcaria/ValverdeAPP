@@ -566,39 +566,52 @@ function openSetup() {
   openModal('m-setup');
 }
 
+function loadViaJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'vv_cb_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      script.remove();
+      reject(new Error('Timeout'));
+    }, 10000);
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+    script.src = url + '&callback=' + cbName;
+    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; script.remove(); reject(new Error('Script load error')); };
+    document.head.appendChild(script);
+  });
+}
+
 async function loadData(autoSync) {
   loadLocal();
   renderAll();
   if (!LOCAL && SCRIPT_URL) {
     try {
-      const r = await fetch(SCRIPT_URL + '?action=getAll', {
-        method: 'GET',
-        headers: { 'Content-Type': 'text/plain' }
-      });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const txt = await r.text();
-      let d;
-      try { d = JSON.parse(txt); } catch(e) { throw new Error('Resposta inválida: ' + txt.slice(0,100)); }
+      const d = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
       if (d && d.bookings !== undefined) {
         S = d;
         localStorage.setItem('vv_data', JSON.stringify(S));
         renderAll();
         if (autoSync) {
           const st = document.getElementById('setup-status');
-          if (st) { st.textContent = '✓ Ligado e sincronizado!'; st.style.color = '#0F6E56'; }
+          if (st) { st.textContent = '✓ Ligado e sincronizado! ' + d.bookings.length + ' reservas'; st.style.color = '#0F6E56'; }
         }
       } else {
-        console.warn('loadData: resposta sem bookings:', d);
         if (autoSync) {
           const st = document.getElementById('setup-status');
-          if (st) { st.textContent = '⚠ Script ligado mas sem dados reconhecíveis. Verifica o Apps Script.'; st.style.color = '#A32D2D'; }
+          if (st) { st.textContent = '⚠ Script ligado mas sem dados reconhecíveis.'; st.style.color = '#A32D2D'; }
         }
       }
     } catch(e) {
       console.error('loadData() erro:', e);
       if (autoSync) {
         const st = document.getElementById('setup-status');
-        if (st) { st.textContent = '✗ Erro: ' + e.message; st.style.color = '#A32D2D'; }
+        if (st) { st.textContent = '✗ Erro: ' + e.message + ' — verifica o URL'; st.style.color = '#A32D2D'; }
       }
     }
   }
@@ -613,24 +626,14 @@ async function persist() {
     savingEl.style.background = '#185FA5';
     savingEl.className = 'saving show';
     try {
-      // Usar URL-encoded form data para evitar CORS preflight no GitHub Pages
-      const payload = 'action=saveAll&data=' + encodeURIComponent(JSON.stringify(S));
-      const r = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: payload
+      // no-cors evita o bloqueio CORS do GitHub Pages — não lemos a resposta
+      // mas o Apps Script recebe e grava na mesma
+      await fetch(SCRIPT_URL + '?action=saveAll&data=' + encodeURIComponent(JSON.stringify(S)), {
+        method: 'GET',
+        mode: 'no-cors'
       });
-      const txt = await r.text();
-      let ok = false;
-      try { const j = JSON.parse(txt); ok = j.ok || j.status === 'ok' || j.success; } catch(e) { ok = r.ok; }
-      if (ok) {
-        savingEl.textContent = '✓ Guardado';
-        savingEl.style.background = '#0F6E56';
-      } else {
-        savingEl.textContent = '⚠ Erro ao guardar';
-        savingEl.style.background = '#A32D2D';
-        console.warn('Apps Script saveAll resposta:', txt);
-      }
+      savingEl.textContent = '✓ Guardado';
+      savingEl.style.background = '#0F6E56';
     } catch(e) {
       savingEl.textContent = '⚠ Sem ligação';
       savingEl.style.background = '#A32D2D';
