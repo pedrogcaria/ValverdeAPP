@@ -472,6 +472,41 @@ body { background: #f5f5f0; }
     </div>
   </div>
 
+  <!-- MODAL DEPÓSITO DE SEGURANÇA -->
+  <div class="modal-overlay" id="m-deposito">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h2>🔒 Depósito de Segurança</h2>
+      <div class="form-group">
+        <label class="form-label">Valor (€)</label>
+        <input type="number" id="dep-valor" placeholder="0" min="0" step="0.01"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data de recepção</label>
+        <input type="date" id="dep-datarec"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data de devolução</label>
+        <input type="date" id="dep-datadev"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select id="dep-estado">
+          <option value="Recebido">Recebido</option>
+          <option value="Devolvido">Devolvido</option>
+          <option value="Retido">Retido parcialmente</option>
+          <option value="Pendente">Pendente</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea id="dep-notas" rows="2" placeholder="Observações sobre o depósito..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="saveDeposito()">Guardar</button>
+      <button class="btn-secondary" onclick="closeModal('m-deposito')">Cancelar</button>
+    </div>
+  </div>
+
   <!-- MODAL SETUP GOOGLE SHEETS -->
   <div class="modal-overlay" id="m-setup">
     <div class="modal">
@@ -491,8 +526,8 @@ body { background: #f5f5f0; }
       <button onclick="testLigacao()" style="width:100%;padding:12px;background:#f5f5f0;color:#185FA5;border:0.5px solid #185FA5;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;">🔍 Testar ligação</button>
       <!-- Backup / Restauro -->
       <div style="margin-top:16px;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:14px;">
-        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">Backup & Restauro</div>
-        <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.5;">Exporta os dados para um ficheiro JSON e importa noutro dispositivo ou deployment.</div>
+        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">💾 Backup & Restauro</div>
+        <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.5;">Exporta todos os dados para um ficheiro JSON que podes guardar ou importar noutro dispositivo.</div>
         <div style="display:flex;gap:8px;">
           <button onclick="exportarJSON()" style="flex:1;padding:11px;background:#EBF4FF;color:#185FA5;border:0.5px solid #185FA5;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">⬇ Exportar</button>
           <label style="flex:1;padding:11px;background:#EAF3DE;color:#27500A;border:0.5px solid #97C459;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;">
@@ -500,7 +535,7 @@ body { background: #f5f5f0; }
             <input type="file" accept=".json" onchange="importarJSON(this)" style="display:none"/>
           </label>
         </div>
-        <div id="backup-status" style="font-size:12px;color:#888;margin-top:6px;"></div>
+        <div id="backup-status" style="font-size:12px;color:#888;margin-top:6px;min-height:18px;"></div>
       </div>
       <!-- Migração (mantida como opção avançada) -->
       <div style="margin-top:16px;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:14px;">
