@@ -621,6 +621,7 @@ function importarJSON(input) {
 }
 
 
+async function migrarDados() {
   const novoUrl = document.getElementById('migrate-url').value.trim();
   const st = document.getElementById('migrate-status');
   if (!novoUrl) { st.textContent = 'Cola o novo URL primeiro.'; st.style.color = '#A32D2D'; return; }
