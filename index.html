@@ -468,6 +468,17 @@ body { background: #f5f5f0; }
       <div class="form-group"><label class="form-label">Nacionalidade</label><input type="text" id="h-nat" placeholder="Ex: Portuguesa" /></div>
       <div class="form-group"><label class="form-label">País de origem</label><select id="h-pais"><option value="">Selecionar...</option><option>Portugal</option><option>Espanha</option><option>França</option><option>Reino Unido</option><option>Alemanha</option><option>Países Baixos</option><option>Bélgica</option><option>Itália</option><option>Brasil</option><option>EUA</option><option>Canadá</option><option>Austrália</option><option>Outro</option></select></div>
       <div class="form-group"><label class="form-label">Comentários</label><textarea id="h-comments" rows="3" placeholder="Notas sobre o hóspede, preferências, histórico..." style="width:100%;padding:10px 12px;border:0.5px solid rgba(0,0,0,0.2);border-radius:10px;font-size:15px;background:#fff;color:#111;resize:vertical;"></textarea></div>
+      <div class="form-group">
+        <label class="form-label">Classificação</label>
+        <div style="display:flex;gap:8px;margin-top:4px;" id="h-rating-stars">
+          <span onclick="setRating(1)" data-val="1" style="font-size:28px;cursor:pointer;opacity:0.3;">★</span>
+          <span onclick="setRating(2)" data-val="2" style="font-size:28px;cursor:pointer;opacity:0.3;">★</span>
+          <span onclick="setRating(3)" data-val="3" style="font-size:28px;cursor:pointer;opacity:0.3;">★</span>
+          <span onclick="setRating(4)" data-val="4" style="font-size:28px;cursor:pointer;opacity:0.3;">★</span>
+          <span onclick="setRating(5)" data-val="5" style="font-size:28px;cursor:pointer;opacity:0.3;">★</span>
+        </div>
+        <input type="hidden" id="h-rating" value="0"/>
+      </div>
       <button class="btn-primary" onclick="saveHospede()">Guardar</button>
       <button class="btn-secondary" onclick="closeModal('m-hospede')">Cancelar</button>
     </div>
@@ -1433,7 +1444,30 @@ function renderHospedes() {
   const list=S.guests.filter(g=>g.name.toLowerCase().includes(q));
   const el=document.getElementById('hospedes-container');
   if(!list.length){el.innerHTML='<div class="empty-state">Sem hóspedes ainda.</div>';return;}
-  el.innerHTML=list.map(g=>{ const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),nr=S.bookings.filter(b=>b.guestId===g.id).length; return `<div class="guest-item" onclick="openGD('${g.id}')"><div class="avatar">${ini}</div><div><div style="font-size:14px;font-weight:600;color:#111">${g.name}</div><div style="font-size:12px;color:#888;margin-top:2px">${g.email||g.phone||''} · ${nr} reserva${nr!==1?'s':''}</div></div></div>`; }).join('');
+  const ratingColors = {
+    0: {bg:'#E6F1FB', color:'#185FA5'},
+    1: {bg:'#FFEBEE', color:'#E53935'},
+    2: {bg:'#FFF3E0', color:'#F57C00'},
+    3: {bg:'#F5F5F5', color:'#757575'},
+    4: {bg:'#E8F5E9', color:'#43A047'},
+    5: {bg:'#C8E6C9', color:'#2E7D32'}
+  };
+  const starColor = r => r===1?'#E53935':r===2?'#F57C00':r===3?'#9E9E9E':r===4?'#7BC47F':'#2E7D32';
+
+  el.innerHTML=list.map(g=>{
+    const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const nr=S.bookings.filter(b=>b.guestId===g.id).length;
+    const r=g.rating||0;
+    const rc=ratingColors[r]||ratingColors[0];
+    const stars = r>0 ? `<span style="font-size:11px;color:${starColor(r)};letter-spacing:1px;">${'★'.repeat(r)}${'☆'.repeat(5-r)}</span>` : '';
+    return `<div class="guest-item" onclick="openGD('${g.id}')">
+      <div class="avatar" style="background:${rc.bg};color:${rc.color};">${ini}</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;color:#111;display:flex;align-items:center;gap:6px;">${g.name}${stars}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px;">${g.email||g.phone||''} · ${nr} reserva${nr!==1?'s':''}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function openBD(i) {
@@ -1496,7 +1530,12 @@ function openGD(gid) {
   const g=S.guests.find(x=>x.id===gid); if(!g) return;
   curGuestId = gid;
   const ini=g.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('gd-avatar').textContent=ini;
+  const ratingColors = {0:{bg:'#E6F1FB',color:'#185FA5'},1:{bg:'#FFEBEE',color:'#E53935'},2:{bg:'#FFF3E0',color:'#F57C00'},3:{bg:'#F5F5F5',color:'#757575'},4:{bg:'#E8F5E9',color:'#43A047'},5:{bg:'#C8E6C9',color:'#2E7D32'}};
+  const rc = ratingColors[g.rating||0]||ratingColors[0];
+  const gdAvatar = document.getElementById('gd-avatar');
+  gdAvatar.textContent=ini;
+  gdAvatar.style.background=rc.bg;
+  gdAvatar.style.color=rc.color;
   document.getElementById('gd-name').textContent=g.name;
   document.getElementById('gd-nat').textContent=g.nationality||'';
   document.getElementById('gd-email').textContent=g.email||'—';
@@ -1515,6 +1554,16 @@ function openGD(gid) {
   document.getElementById('guest-detail').classList.add('open');
 }
 
+function setRating(val) {
+  document.getElementById('h-rating').value = val;
+  document.querySelectorAll('#h-rating-stars span').forEach(s => {
+    const v = parseInt(s.dataset.val);
+    s.style.opacity = v <= val ? '1' : '0.25';
+    s.style.color = val === 1 ? '#E53935' : val === 2 ? '#F57C00' : val === 3 ? '#888' : val === 4 ? '#7BC47F' : '#2E7D32';
+  });
+}
+
+
 function editHospede(gid) {
   const g = S.guests.find(x=>x.id===gid); if(!g) return;
   document.getElementById('h-id').value = gid;
@@ -1524,6 +1573,9 @@ function editHospede(gid) {
   document.getElementById('h-nat').value = g.nationality||'';
   document.getElementById('h-pais').value = g.pais||'';
   document.getElementById('h-comments').value = g.comments||'';
+  document.getElementById('h-rating').value = g.rating||0;
+  if (g.rating) setRating(g.rating);
+  else document.querySelectorAll('#h-rating-stars span').forEach(s=>{s.style.opacity='0.25';s.style.color='#ccc';});
   openModal('m-hospede');
 }
 
@@ -1539,6 +1591,7 @@ function saveHospede() {
     S.guests[idx].nationality = document.getElementById('h-nat').value.trim();
     S.guests[idx].pais = document.getElementById('h-pais').value;
     S.guests[idx].comments = document.getElementById('h-comments').value.trim();
+    S.guests[idx].rating = parseInt(document.getElementById('h-rating').value)||0;
     S.bookings.forEach(b => { if(b.guestId===gid) b.name = nome; });
   }
   persist(); renderAll(); closeModal('m-hospede'); openGD(gid);
