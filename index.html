@@ -165,6 +165,7 @@ body { background: #f5f5f0; }
         <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#B5D4F4;"></div><span style="font-size:10px;color:#888;">Reserva</span></div>
         <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#F0997B;"></div><span style="font-size:10px;color:#888;">Gasto</span></div>
         <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#9FE1CB;"></div><span style="font-size:10px;color:#888;">Ambos</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:2px;background:#C9A8E8;"></div><span style="font-size:10px;color:#888;">Turnover</span></div>
       </div>
     </div>
     <!-- CALENDAR DETAIL PANEL -->
@@ -1256,27 +1257,40 @@ function renderCalGrid() {
   const prim = new Date(y,m,1).getDay();
   const off = prim===0?6:prim-1;
   
-  // Build occupied days map with type: booking, expense, both
+  // Build occupied days map with type: booking, expense, both, turnover
   const dayMap = {};
+  const checkinDays = new Set();
+  const checkoutDays = new Set();
+
   S.bookings.filter(b=>b.status!=='Cancelada').forEach(b=>{
     const ci=new Date(b.checkin), co=new Date(b.checkout);
-    for(let d=new Date(ci);d<co;d.setDate(d.getDate()+1)){
+    // Registar check-ins e checkouts
+    if(ci.getMonth()===m&&ci.getFullYear()===y) checkinDays.add(ci.getDate());
+    if(co.getMonth()===m&&co.getFullYear()===y) checkoutDays.add(co.getDate());
+    // Marcar dias ocupados
+    for(let d=new Date(ci);d<=co;d.setDate(d.getDate()+1)){
       if(d.getMonth()===m&&d.getFullYear()===y){
         const day=d.getDate();
         dayMap[day] = dayMap[day]==='expense'?'both':'booking';
       }
     }
   });
+
+  // Marcar dias de turnover (check-out e check-in no mesmo dia)
+  checkinDays.forEach(day => {
+    if(checkoutDays.has(day) && dayMap[day]==='booking') dayMap[day]='turnover';
+  });
+
   S.expenses.forEach(e=>{
     if(!e.date) return;
     const d=new Date(e.date);
     if(d.getMonth()===m&&d.getFullYear()===y){
       const day=d.getDate();
-      dayMap[day] = dayMap[day]==='booking'?'both':'expense';
+      dayMap[day] = dayMap[day]==='booking'?'both':dayMap[day]==='turnover'?'turnover':'expense';
     }
   });
 
-  const colorMap = { booking:'#B5D4F4', expense:'#F0997B', both:'#9FE1CB' };
+  const colorMap = { booking:'#B5D4F4', expense:'#F0997B', both:'#9FE1CB', turnover:'#C9A8E8' };
   const dw=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   document.getElementById('cal-grid').innerHTML = 
     dw.map(d=>`<div class="cal-header">${d}</div>`).join('') +
@@ -1299,7 +1313,7 @@ function showCalDetail(day) {
   const bookingsDay = S.bookings.filter(b=>{
     if(b.status==='Cancelada') return false;
     const ci=new Date(b.checkin), co=new Date(b.checkout), dt=new Date(dateStr);
-    return dt>=ci && dt<co;
+    return dt>=ci && dt<=co;
   });
   const expensesDay = S.expenses.filter(e=>e.date===dateStr);
   
@@ -1309,11 +1323,25 @@ function showCalDetail(day) {
   let html = '';
   if(bookingsDay.length) {
     html += '<div style="font-size:11px;font-weight:600;color:#0C447C;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Reservas</div>';
-    html += bookingsDay.map(b=>`
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);">
-        <div><div style="font-size:13px;font-weight:600;">${b.name}</div><div style="font-size:11px;color:#888;">${fmt(b.checkin)} – ${fmt(b.checkout)}</div></div>
-        <div style="text-align:right;"><div style="font-size:13px;font-weight:600;">${euro(b.price)}</div><span class="badge ${badgeMap[b.status]||''}" style="margin-top:2px;">${b.status}</span></div>
-      </div>`).join('');
+    html += bookingsDay.map((b,i)=>{
+      const idx = S.bookings.indexOf(b);
+      const isCheckout = b.checkout === dateStr;
+      const isCheckin = b.checkin === dateStr;
+      const badge = isCheckin ? '<span style="font-size:10px;background:#EAF3DE;color:#27500A;padding:2px 6px;border-radius:6px;margin-left:4px;">Check-in</span>' 
+                  : isCheckout ? '<span style="font-size:10px;background:#e0e0e0;color:#444;padding:2px 6px;border-radius:6px;margin-left:4px;">Check-out</span>' : '';
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <div>
+          <div style="font-size:13px;font-weight:600;">${b.name}${badge}</div>
+          <div style="font-size:11px;color:#888;">${fmt(b.checkin)} – ${fmt(b.checkout)}</div>
+        </div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="font-size:13px;font-weight:600;">${euro(b.price)}</div>
+          <span class="badge ${badgeMap[b.status]||''}">${b.status}</span>
+          <button onclick="closeCalDetail();openBookingDetail(${idx})" style="font-size:11px;background:#185FA5;color:#fff;border:none;border-radius:8px;padding:3px 10px;cursor:pointer;margin-top:2px;">Ver reserva →</button>
+        </div>
+      </div>`;
+    }).join('');
   }
   if(expensesDay.length) {
     if(bookingsDay.length) html += '<div style="margin-top:10px;"></div>';
@@ -1436,9 +1464,17 @@ function openBD(i) {
   document.getElementById('booking-detail').classList.add('open');
 }
 
-function closeBookingDetail() { document.getElementById('reservas-list').style.display='block'; document.getElementById('booking-detail').classList.remove('open'); }
+function closeCalDetail() { document.getElementById('cal-detail').style.display='none'; }
 
-function deleteReserva() {
+function openBookingDetail(idx) {
+  const btn = document.querySelectorAll('.navbtn')[1];
+  switchTab('reservas', btn);
+  setTimeout(() => openBD(idx), 100);
+}
+
+
+
+function closeBookingDetail() { document.getElementById('reservas-list').style.display='block'; document.getElementById('booking-detail').classList.remove('open'); }
   const b = S.bookings[curBookingIdx];
   if (!confirm('Apagar a reserva de ' + b.name + '?\nEsta ação não pode ser desfeita.')) return;
   S.bookings.splice(curBookingIdx, 1);
