@@ -1261,13 +1261,12 @@ function renderCalGrid() {
   const dayMap = {};
   const checkinDays = new Set();
   const checkoutDays = new Set();
+  const parseLocal = s => { const [y,mo,d]=s.split('-').map(Number); return new Date(y,mo-1,d); };
 
   S.bookings.filter(b=>b.status!=='Cancelada').forEach(b=>{
-    const ci=new Date(b.checkin), co=new Date(b.checkout);
-    // Registar check-ins e checkouts
+    const ci=parseLocal(b.checkin), co=parseLocal(b.checkout);
     if(ci.getMonth()===m&&ci.getFullYear()===y) checkinDays.add(ci.getDate());
     if(co.getMonth()===m&&co.getFullYear()===y) checkoutDays.add(co.getDate());
-    // Marcar dias ocupados
     for(let d=new Date(ci);d<=co;d.setDate(d.getDate()+1)){
       if(d.getMonth()===m&&d.getFullYear()===y){
         const day=d.getDate();
@@ -1276,14 +1275,13 @@ function renderCalGrid() {
     }
   });
 
-  // Marcar dias de turnover (check-out e check-in no mesmo dia)
   checkinDays.forEach(day => {
     if(checkoutDays.has(day) && dayMap[day]==='booking') dayMap[day]='turnover';
   });
 
   S.expenses.forEach(e=>{
     if(!e.date) return;
-    const d=new Date(e.date);
+    const d=parseLocal(e.date);
     if(d.getMonth()===m&&d.getFullYear()===y){
       const day=d.getDate();
       dayMap[day] = dayMap[day]==='booking'?'both':dayMap[day]==='turnover'?'turnover':'expense';
@@ -1312,7 +1310,8 @@ function showCalDetail(day) {
   
   const bookingsDay = S.bookings.filter(b=>{
     if(b.status==='Cancelada') return false;
-    const ci=new Date(b.checkin), co=new Date(b.checkout), dt=new Date(dateStr);
+    const parseL = s => { const [y,mo,d]=s.split('-').map(Number); return new Date(y,mo-1,d); };
+    const ci=parseL(b.checkin), co=parseL(b.checkout), dt=parseL(dateStr);
     return dt>=ci && dt<=co;
   });
   const expensesDay = S.expenses.filter(e=>e.date===dateStr);
