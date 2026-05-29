@@ -1474,6 +1474,8 @@ function openBookingDetail(idx) {
 
 
 function closeBookingDetail() { document.getElementById('reservas-list').style.display='block'; document.getElementById('booking-detail').classList.remove('open'); }
+
+function deleteReserva() {
   const b = S.bookings[curBookingIdx];
   if (!confirm('Apagar a reserva de ' + b.name + '?\nEsta ação não pode ser desfeita.')) return;
   S.bookings.splice(curBookingIdx, 1);
