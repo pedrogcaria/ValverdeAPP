@@ -149,7 +149,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.6</span>
+        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.7</span>
       </div>
     </div>
   </div>
@@ -294,6 +294,7 @@ body { background: #f5f5f0; }
       <div class="filter-chip" onclick="filterChip(this,'g','Água')">Água</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Internet')">Internet</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Consumíveis')">Consumíveis</div>
+      <div class="filter-chip" onclick="filterChip(this,'g','Comissão')">Comissão</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Por pagar')">Por pagar</div>
       <div class="filter-chip" onclick="filterChip(this,'g','Pago')">Pago</div>
     </div>
@@ -551,7 +552,7 @@ body { background: #f5f5f0; }
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>&#9881;&#65039; Configurações</h2>
-      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.6</div>
+      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.7</div>
       <div style="background:#EAF3DE;border:0.5px solid #97C459;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
         <div style="font-size:13px;font-weight:600;color:#27500A;margin-bottom:4px;">☁ Base de dados (Supabase)</div>
         <div style="font-size:12px;color:#3a5a1a;line-height:1.5;">Os dados ficam guardados na tua base de dados e sincronizados em todos os dispositivos com login.</div>
@@ -663,6 +664,7 @@ async function sbLoad() {
     } else {
       sbStatus('✓ Ligado à base de dados (vazia).', true);
     }
+    reconcileComissoes(true);
   } catch(e) {
     console.error('sbLoad:', e);
     sbStatus('⚠ Sem ligação à base de dados — a usar cache local.', false);
@@ -707,6 +709,36 @@ const badgeMap = { 'Pendente':'badge-pending','Confirmada':'badge-confirmed','Ch
 const statuses = ['Pendente','Confirmada','Check-in feito','Check-out feito'];
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+
+// Despesa automática de comissão: existe enquanto a reserva estiver "Pago" (e não cancelada).
+// Ao mudar o pagamento, a entrada é criada ou removida da lista de gastos.
+function syncComissaoDespesa(b) {
+  if (!b || !b.id) return;
+  S.expenses = S.expenses.filter(e => !(e.auto === 'comissao' && e.bookingId === b.id));
+  const com = parseFloat(b.comissao || 0);
+  if (b.pagamento === 'Pago' && b.status !== 'Cancelada' && com > 0) {
+    S.expenses.push({
+      id: uid(),
+      auto: 'comissao',
+      bookingId: b.id,
+      category: 'Comissão',
+      amount: String(com),
+      date: b.checkin || new Date().toISOString().slice(0,10),
+      desc: 'Comissão · ' + (b.name || (b.reservaNum ? ('reserva ' + b.reservaNum) : 'reserva')),
+      paidto: b.canal || 'OTA',
+      pago: true,
+      datapag: b.checkin || ''
+    });
+  }
+}
+
+// Reconcilia todas as comissões (ex.: ao carregar dados). Idempotente.
+function reconcileComissoes(doPersist) {
+  const sig = () => JSON.stringify(S.expenses.filter(e=>e.auto==='comissao').map(e=>e.bookingId+'|'+e.amount+'|'+e.date).sort());
+  const before = sig();
+  (S.bookings||[]).forEach(b => syncComissaoDespesa(b));
+  if (sig() !== before) { renderAll(); if (doPersist) persist(); }
+}
 function fmt(d) { if(!d) return ''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('pt-PT',{day:'numeric',month:'short',year:'numeric'}); }
 function euro(v) { return parseFloat(v||0).toLocaleString('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0})+' €'; }
 
@@ -1166,6 +1198,7 @@ function saveEditReserva() {
   b.canal = document.getElementById('f-canal').value;
   b.payment = document.getElementById('f-payment').value;
   b.pagamento = document.getElementById('f-pagstatus').value;
+  syncComissaoDespesa(b);
   // Update guest too
   const g = S.guests.find(x => x.id === b.guestId);
   if (g) { g.name = nome; g.email = b.email; g.phone = b.phone; }
@@ -1205,7 +1238,6 @@ function renderRelatorios() {
     if (ci.getFullYear() !== anoSel) return;
     const m = ci.getMonth();
     receitaMes[m] += parseFloat(b.price||0);
-    gastosMes[m] += comissaoCusto(b);
   });
   S.expenses.forEach(e => {
     const d = new Date(e.date);
@@ -1241,8 +1273,6 @@ function renderRelatorios() {
   S.expenses.filter(e=>new Date(e.date).getFullYear()===anoSel).forEach(e=>{
     catMap[e.category] = (catMap[e.category]||0) + parseFloat(e.amount||0);
   });
-  const totalComissoes = S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()===anoSel).reduce((s,b)=>s+comissaoCusto(b),0);
-  if(totalComissoes>0) catMap['Comissões'] = (catMap['Comissões']||0) + totalComissoes;
   const catLabels = Object.keys(catMap), catVals = Object.values(catMap);
 
   // Charts
@@ -1304,7 +1334,7 @@ function exportPDF() {
   const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   
   const receitaMes = Array(12).fill(0), gastosMes = Array(12).fill(0);
-  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ const mm=new Date(b.checkin).getMonth(); receitaMes[mm]+=parseFloat(b.price||0); gastosMes[mm]+=comissaoCusto(b); });
+  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ receitaMes[new Date(b.checkin).getMonth()]+=parseFloat(b.price||0); });
   S.expenses.filter(e=>new Date(e.date).getFullYear()==anoSel).forEach(e=>{ gastosMes[new Date(e.date).getMonth()]+=parseFloat(e.amount||0); });
   const totalRec = receitaMes.reduce((a,b)=>a+b,0);
   const totalGas = gastosMes.reduce((a,b)=>a+b,0);
@@ -1520,13 +1550,13 @@ function renderDash() {
   const mB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getMonth()===m&&d.getFullYear()===y&&b.status!=='Cancelada'; });
   const rec=mB.reduce((s,b)=>s+parseFloat(b.price||0),0);
   const mE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getMonth()===m&&d.getFullYear()===y; });
-  const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0) + mB.reduce((s,b)=>s+comissaoCusto(b),0);
+  const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
   const por=S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada').reduce((s,b)=>s+parseFloat(b.price||0),0);
   // Annual metrics
   const yB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getFullYear()===y&&b.status!=='Cancelada'; });
   const recAno=yB.reduce((s,b)=>s+parseFloat(b.price||0),0);
   const yE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getFullYear()===y; });
-  const gasAno=yE.reduce((s,e)=>s+parseFloat(e.amount||0),0) + yB.reduce((s,b)=>s+comissaoCusto(b),0);
+  const gasAno=yE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
   // Update labels with month name
   ['d-receita-label','d-gastos-label','d-lucro-label'].forEach(id=>{
     const labels=['Receita','Gastos','Lucro'];
@@ -1563,6 +1593,7 @@ function renderGastos() {
   el.innerHTML=[...list].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((e,i)=>{
   const ri = S.expenses.indexOf(e);
   const pago = e.pago !== false;
+  const isAuto = e.auto === 'comissao';
   const pagBadge = pago ? '<span class="badge badge-pago">Pago</span>' : '<span class="badge badge-nao-pago">Por pagar</span>';
   const datapagStr = (pago && e.datapag) ? ' · pago em ' + fmt(e.datapag) : '';
   return `<div class="expense-item">
@@ -1575,9 +1606,9 @@ function renderGastos() {
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px;">
       <div class="expense-amount">–${euro(e.amount)}</div>
       <div style="display:flex;gap:6px;">
-        <button onclick="toggleGastoPago(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">${pago?'Por pagar':'Pago'}</button>
+        ${isAuto ? '<span style="font-size:10px;color:#999;white-space:nowrap;align-self:center;">🔗 gerido pela reserva</span>' : `<button onclick="toggleGastoPago(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">${pago?'Por pagar':'Pago'}</button>
         <button onclick="editGasto(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.2);background:#f5f5f0;cursor:pointer;">✏️</button>
-        <button onclick="deleteGasto(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid #A32D2D;color:#A32D2D;background:none;cursor:pointer;">🗑</button>
+        <button onclick="deleteGasto(${ri})" style="font-size:11px;padding:3px 8px;border-radius:20px;border:0.5px solid #A32D2D;color:#A32D2D;background:none;cursor:pointer;">🗑</button>`}
       </div>
     </div>
   </div>`;
@@ -1658,6 +1689,7 @@ function deleteReserva() {
   const b = S.bookings[curBookingIdx];
   if (!confirm('Apagar a reserva de ' + b.name + '?\nEsta ação não pode ser desfeita.')) return;
   S.bookings.splice(curBookingIdx, 1);
+  S.expenses = S.expenses.filter(e => !(e.auto === 'comissao' && e.bookingId === b.id));
   persist(); renderAll(); closeBookingDetail();
 }
 
@@ -1667,8 +1699,8 @@ function renderPag(p) {
   else if(p==='Parcial') document.getElementById('pag-parc').className='pag-btn active-parcial';
   else document.getElementById('pag-nao').className='pag-btn active-nao';
 }
-function setPagamento(v) { S.bookings[curBookingIdx].pagamento=v; renderPag(v); persist(); renderReservas(); renderDash(); }
-function changeStatus(i,s,btn) { S.bookings[i].status=s; document.querySelectorAll('#det-workflow .wf-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('det-badge').textContent=s; document.getElementById('det-badge').className='badge '+(badgeMap[s]||''); persist(); renderReservas(); renderDash(); }
+function setPagamento(v) { const b=S.bookings[curBookingIdx]; b.pagamento=v; syncComissaoDespesa(b); renderPag(v); persist(); renderReservas(); renderDash(); renderGastos(); }
+function changeStatus(i,s,btn) { S.bookings[i].status=s; syncComissaoDespesa(S.bookings[i]); document.querySelectorAll('#det-workflow .wf-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('det-badge').textContent=s; document.getElementById('det-badge').className='badge '+(badgeMap[s]||''); persist(); renderReservas(); renderDash(); renderGastos(); }
 
 let curGuestId = null;
 function openGD(gid) {
@@ -1937,6 +1969,7 @@ function saveReserva() {
   else{if(tel) g.phone=tel; if(email) g.email=email;}
   S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,comissao:document.getElementById('f-comissao').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
   ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price','f-comissao'].forEach(id=>document.getElementById(id).value='');
+  syncComissaoDespesa(S.bookings[S.bookings.length-1]);
   persist(); renderAll(); closeModal('m-reserva');
 }
 
@@ -2002,7 +2035,7 @@ function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filte
 
 document.addEventListener('DOMContentLoaded', function() {
   // Data automática
-  const APP_VERSION = 'v2.6';
+  const APP_VERSION = 'v2.7';
   const now = new Date();
   const dia = String(now.getDate()).padStart(2,'0');
   const mes = String(now.getMonth()+1).padStart(2,'0');
