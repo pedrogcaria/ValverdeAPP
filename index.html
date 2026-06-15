@@ -113,8 +113,32 @@ body { background: #f5f5f0; }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    #login-screen { position:fixed; inset:0; z-index:9999; background:#f5f5f0; display:none; align-items:center; justify-content:center; padding:24px; }
+    #login-screen .login-card { background:#fff; border-radius:18px; padding:28px 22px; width:100%; max-width:360px; box-shadow:0 8px 30px rgba(0,0,0,0.08); }
+    #login-screen h2 { font-size:22px; margin:0 0 4px; color:#111; }
+    #login-screen p.sub { font-size:13px; color:#888; margin:0 0 20px; }
+    #login-screen label { display:block; font-size:12px; color:#888; margin-bottom:4px; }
+    #login-screen input { width:100%; padding:12px; border:0.5px solid rgba(0,0,0,0.2); border-radius:10px; font-size:15px; margin-bottom:14px; box-sizing:border-box; }
+    #login-screen button { width:100%; padding:13px; background:#185FA5; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; }
+    #login-screen button:disabled { opacity:0.6; }
+    #login-err { color:#A32D2D; font-size:12px; min-height:16px; margin-top:10px; text-align:center; }
+  </style>
 </head>
 <body>
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Valverde</h2>
+    <p class="sub">Entra para aceder à gestão.</p>
+    <label>Email</label>
+    <input type="email" id="login-email" autocomplete="username" placeholder="o-teu@email.com" />
+    <label>Palavra-passe</label>
+    <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')sbLogin()" />
+    <button id="login-btn" onclick="sbLogin()">Entrar</button>
+    <div id="login-err"></div>
+  </div>
+</div>
 <div class="app" id="app">
   <div class="topbar">
     <div>
@@ -125,7 +149,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.4</span>
+        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.6</span>
       </div>
     </div>
   </div>
@@ -430,7 +454,10 @@ body { background: #f5f5f0; }
         <div class="form-group"><label class="form-label">Canal</label><select id="f-canal"><option>Booking.com</option><option>Airbnb</option><option>Direto</option><option>Outro</option></select></div>
         <div class="form-group"><label class="form-label">Pagamento</label><select id="f-payment"><option>OTA</option><option>Transferência</option><option>MBWay</option><option>Numerário</option><option>Cartão</option></select></div>
       </div>
-      <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="f-pagstatus"><option>Não pago</option><option>Parcial</option><option>Pago</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Comissão (€)</label><input type="number" id="f-comissao" placeholder="0" step="0.01" /></div>
+        <div class="form-group"><label class="form-label">Estado de pagamento</label><select id="f-pagstatus"><option>Não pago</option><option>Parcial</option><option>Pago</option></select></div>
+      </div>
       <button class="btn-primary" onclick="saveReserva()">Guardar reserva</button>
       <button class="btn-secondary" onclick="closeModal('m-reserva')">Cancelar</button>
     </div>
@@ -524,10 +551,18 @@ body { background: #f5f5f0; }
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>&#9881;&#65039; Configurações</h2>
-      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.4</div>
-      <div class="info-banner">
-        <p>Cola aqui o URL do Google Apps Script para sincronizar dados entre telemóvel e PC.</p>
+      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.6</div>
+      <div style="background:#EAF3DE;border:0.5px solid #97C459;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:#27500A;margin-bottom:4px;">☁ Base de dados (Supabase)</div>
+        <div style="font-size:12px;color:#3a5a1a;line-height:1.5;">Os dados ficam guardados na tua base de dados e sincronizados em todos os dispositivos com login.</div>
+        <button onclick="sbLogout()" style="margin-top:10px;padding:9px 14px;background:#fff;color:#A32D2D;border:0.5px solid #A32D2D;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Terminar sessão</button>
       </div>
+      <details style="margin-bottom:10px;">
+        <summary style="font-size:12px;color:#999;cursor:pointer;">Google Sheets (antigo — já não usado)</summary>
+        <div class="info-banner" style="margin-top:8px;">
+          <p>Esta sincronização foi substituída pelo Supabase. Mantida apenas para referência.</p>
+        </div>
+      </details>
       <div class="form-group">
         <label class="form-label">URL atual do Google Apps Script</label>
         <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/.../exec" />
@@ -569,6 +604,104 @@ const SHEET_ID = '1EPXYbVdeFSMYnwmDFMTj5WTiIGVUKMefQKDzcikROR0';
 let SCRIPT_URL = localStorage.getItem('vv_script') || 'https://script.google.com/macros/s/AKfycbw7czEdUIerXD-ZRqjd0q4hbk_pI8PkEc2hUJuy5e9z9ue17p8gi0gMsnchHh5_tWdn/exec';
 let LOCAL = SCRIPT_URL ? false : localStorage.getItem('vv_local') === '1';
 let S = { bookings: [], expenses: [], guests: [] };
+
+// ===================== SUPABASE =====================
+const USE_SUPABASE = true;
+const SUPABASE_URL = 'https://jnzxdcwujwqwgmnskslz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JKtj8uWHnxAYFC_-Bcy9Ow_tJcIMwrx';
+const sb = (window.supabase && USE_SUPABASE) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+function sbStatus(msg, ok) {
+  const st = document.getElementById('setup-status');
+  if (st) { st.textContent = msg; st.style.color = ok ? '#0F6E56' : '#A32D2D'; }
+}
+
+async function sbLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Preenche email e palavra-passe.'; return; }
+  btn.disabled = true; btn.textContent = 'A entrar...';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email: email, password: pass });
+    if (error) throw error;
+    document.getElementById('login-screen').style.display = 'none';
+    loadLocal(); renderAll();
+    await sbLoad();
+  } catch(e) {
+    err.textContent = 'Não foi possível entrar. Verifica os dados.';
+    console.error('sbLogin:', e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+async function sbLogout() {
+  if (!confirm('Terminar sessão?')) return;
+  try { await sb.auth.signOut(); } catch(e) { console.error(e); }
+  location.reload();
+}
+
+async function sbLoad() {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('valverde_data').select('data').eq('id','main').maybeSingle();
+    if (error) throw error;
+    const cloud = (data && data.data) ? data.data : null;
+    const cloudEmpty = !cloud || ((cloud.bookings||[]).length===0 && (cloud.expenses||[]).length===0 && (cloud.guests||[]).length===0);
+    const localHasData = (S.bookings||[]).length>0 || (S.expenses||[]).length>0 || (S.guests||[]).length>0;
+    if (cloudEmpty && localHasData) {
+      await sbSave();
+      sbStatus('✓ Dados migrados para a base de dados (' + S.bookings.length + ' reservas).', true);
+    } else if (!cloudEmpty) {
+      S = { bookings: cloud.bookings||[], expenses: cloud.expenses||[], guests: cloud.guests||[] };
+      localStorage.setItem('vv_data', JSON.stringify(S));
+      renderAll();
+      sbStatus('✓ Ligado à base de dados (' + S.bookings.length + ' reservas).', true);
+    } else {
+      sbStatus('✓ Ligado à base de dados (vazia).', true);
+    }
+  } catch(e) {
+    console.error('sbLoad:', e);
+    sbStatus('⚠ Sem ligação à base de dados — a usar cache local.', false);
+  }
+}
+
+async function sbSave() {
+  if (!sb) return;
+  const savingEl = document.getElementById('saving');
+  if (savingEl) { savingEl.textContent='A guardar...'; savingEl.style.background='#185FA5'; savingEl.className='saving show'; }
+  try {
+    const { error } = await sb.from('valverde_data').upsert({ id:'main', data:S, updated_at:new Date().toISOString() });
+    if (error) throw error;
+    if (savingEl) { savingEl.textContent='✓ Guardado'; savingEl.style.background='#0F6E56'; }
+  } catch(e) {
+    if (savingEl) { savingEl.textContent='⚠ Sem ligação'; savingEl.style.background='#A32D2D'; }
+    console.error('sbSave:', e);
+  }
+  if (savingEl) setTimeout(()=>{ savingEl.className='saving'; }, 2500);
+}
+
+async function initApp() {
+  if (!USE_SUPABASE || !sb) { loadData(); return; }
+  const ls = document.getElementById('login-screen');
+  try {
+    const { data } = await sb.auth.getSession();
+    if (data && data.session) {
+      if (ls) ls.style.display = 'none';
+      loadLocal(); renderAll();
+      await sbLoad();
+    } else {
+      if (ls) ls.style.display = 'flex';
+    }
+  } catch(e) {
+    console.error('initApp:', e);
+    if (ls) ls.style.display = 'flex';
+  }
+}
+// =================== FIM SUPABASE ===================
 let curTab = 'dashboard', curBookingIdx = null, rFilter = 'Todas', gFilter = 'Todos';
 const badgeMap = { 'Pendente':'badge-pending','Confirmada':'badge-confirmed','Check-in feito':'badge-checkin','Check-out feito':'badge-checkout','Cancelada':'badge-cancelled' };
 const statuses = ['Pendente','Confirmada','Check-in feito','Check-out feito'];
@@ -818,6 +951,7 @@ async function loadData(autoSync) {
 function loadLocal() { const d=localStorage.getItem('vv_data'); if(d) S=JSON.parse(d); }
 async function persist() {
   localStorage.setItem('vv_data', JSON.stringify(S));
+  if (USE_SUPABASE && sb) { sbSave(); return; }
   if (!LOCAL && SCRIPT_URL) {
     const savingEl = document.getElementById('saving');
     savingEl.textContent = 'A guardar...';
@@ -1009,6 +1143,7 @@ function editReserva() {
   document.getElementById('f-checkout').value = b.checkout;
   document.getElementById('f-guests').value = b.guests;
   document.getElementById('f-price').value = b.price;
+  document.getElementById('f-comissao').value = b.comissao || '';
   document.getElementById('f-canal').value = b.canal;
   document.getElementById('f-payment').value = b.payment;
   document.getElementById('f-pagstatus').value = b.pagamento || 'Não pago';
@@ -1027,6 +1162,7 @@ function saveEditReserva() {
   b.checkout = document.getElementById('f-checkout').value;
   b.guests = document.getElementById('f-guests').value;
   b.price = document.getElementById('f-price').value;
+  b.comissao = document.getElementById('f-comissao').value;
   b.canal = document.getElementById('f-canal').value;
   b.payment = document.getElementById('f-payment').value;
   b.pagamento = document.getElementById('f-pagstatus').value;
@@ -1069,6 +1205,7 @@ function renderRelatorios() {
     if (ci.getFullYear() !== anoSel) return;
     const m = ci.getMonth();
     receitaMes[m] += parseFloat(b.price||0);
+    gastosMes[m] += comissaoCusto(b);
   });
   S.expenses.forEach(e => {
     const d = new Date(e.date);
@@ -1104,6 +1241,8 @@ function renderRelatorios() {
   S.expenses.filter(e=>new Date(e.date).getFullYear()===anoSel).forEach(e=>{
     catMap[e.category] = (catMap[e.category]||0) + parseFloat(e.amount||0);
   });
+  const totalComissoes = S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()===anoSel).reduce((s,b)=>s+comissaoCusto(b),0);
+  if(totalComissoes>0) catMap['Comissões'] = (catMap['Comissões']||0) + totalComissoes;
   const catLabels = Object.keys(catMap), catVals = Object.values(catMap);
 
   // Charts
@@ -1165,7 +1304,7 @@ function exportPDF() {
   const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   
   const receitaMes = Array(12).fill(0), gastosMes = Array(12).fill(0);
-  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ receitaMes[new Date(b.checkin).getMonth()]+=parseFloat(b.price||0); });
+  S.bookings.filter(b=>b.status!=='Cancelada'&&new Date(b.checkin).getFullYear()==anoSel).forEach(b=>{ const mm=new Date(b.checkin).getMonth(); receitaMes[mm]+=parseFloat(b.price||0); gastosMes[mm]+=comissaoCusto(b); });
   S.expenses.filter(e=>new Date(e.date).getFullYear()==anoSel).forEach(e=>{ gastosMes[new Date(e.date).getMonth()]+=parseFloat(e.amount||0); });
   const totalRec = receitaMes.reduce((a,b)=>a+b,0);
   const totalGas = gastosMes.reduce((a,b)=>a+b,0);
@@ -1367,6 +1506,12 @@ function showCalDetail(day) {
   document.getElementById('cal-detail').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
+// Comissão da reserva conta como custo apenas quando está totalmente paga.
+// Se o estado de pagamento sair de "Pago", o custo deixa de ser contabilizado.
+function comissaoCusto(b) {
+  return (b.pagamento === 'Pago' && b.status !== 'Cancelada') ? parseFloat(b.comissao || 0) : 0;
+}
+
 function renderDash() {
   const now=new Date();
   const m=calMonth, y=calYear;
@@ -1375,13 +1520,13 @@ function renderDash() {
   const mB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getMonth()===m&&d.getFullYear()===y&&b.status!=='Cancelada'; });
   const rec=mB.reduce((s,b)=>s+parseFloat(b.price||0),0);
   const mE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getMonth()===m&&d.getFullYear()===y; });
-  const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const gas=mE.reduce((s,e)=>s+parseFloat(e.amount||0),0) + mB.reduce((s,b)=>s+comissaoCusto(b),0);
   const por=S.bookings.filter(b=>b.pagamento==='Não pago'&&b.status!=='Cancelada').reduce((s,b)=>s+parseFloat(b.price||0),0);
   // Annual metrics
   const yB=S.bookings.filter(b=>{ const d=new Date(b.checkin); return d.getFullYear()===y&&b.status!=='Cancelada'; });
   const recAno=yB.reduce((s,b)=>s+parseFloat(b.price||0),0);
   const yE=S.expenses.filter(e=>{ const d=new Date(e.date); return d.getFullYear()===y; });
-  const gasAno=yE.reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const gasAno=yE.reduce((s,e)=>s+parseFloat(e.amount||0),0) + yB.reduce((s,b)=>s+comissaoCusto(b),0);
   // Update labels with month name
   ['d-receita-label','d-gastos-label','d-lucro-label'].forEach(id=>{
     const labels=['Receita','Gastos','Lucro'];
@@ -1790,8 +1935,8 @@ function saveReserva() {
   if(!g) g=S.guests.find(x=>x.name.toLowerCase()===nome.toLowerCase());
   if(!g){g={id:uid(),name:nome,email:email,phone:tel,nationality:'',pais:'',comments:''}; S.guests.push(g);}
   else{if(tel) g.phone=tel; if(email) g.email=email;}
-  S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
-  ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price'].forEach(id=>document.getElementById(id).value='');
+  S.bookings.push({id:uid(),guestId:g.id,name:nome,canal:document.getElementById('f-canal').value,checkin:document.getElementById('f-checkin').value,checkout:document.getElementById('f-checkout').value,guests:document.getElementById('f-guests').value,price:document.getElementById('f-price').value,comissao:document.getElementById('f-comissao').value,payment:document.getElementById('f-payment').value,pagamento:document.getElementById('f-pagstatus').value,status:'Pendente',email:g.email,phone:g.phone});
+  ['f-nome','f-email','f-tel','f-checkin','f-checkout','f-price','f-comissao'].forEach(id=>document.getElementById(id).value='');
   persist(); renderAll(); closeModal('m-reserva');
 }
 
@@ -1857,7 +2002,7 @@ function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filte
 
 document.addEventListener('DOMContentLoaded', function() {
   // Data automática
-  const APP_VERSION = 'v2.4';
+  const APP_VERSION = 'v2.6';
   const now = new Date();
   const dia = String(now.getDate()).padStart(2,'0');
   const mes = String(now.getMonth()+1).padStart(2,'0');
@@ -1869,7 +2014,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const sv = document.getElementById('setup-version');
   if (sv) sv.textContent = 'Valverde App · ' + APP_VERSION + ' · ' + dia + ' ' + mesNome + ' ' + ano;
 
-  loadData();
+  initApp();
   document.getElementById('file-camera').addEventListener('change', function() { handlePhoto(this); });
   document.getElementById('file-gallery').addEventListener('change', function() { handlePhoto(this); });
 });
