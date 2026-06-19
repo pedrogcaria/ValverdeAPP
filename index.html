@@ -149,7 +149,7 @@ body { background: #f5f5f0; }
       <button onclick="openSetup()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px;" title="Configurações">&#9881;&#65039;</button>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <img id="topbar-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADjklEQVR42u3d25HbMBBFQWSg7ByG8/+jHYLEIYF5NOsGAB01WS55V7vW9uvz94+9tNXp8naCBQ1M6FhyRt4MjNDBCB2rwkhrhtCx7YyUZYgeO2FITYbosROGFDR67IQh1SxkSDK7D0gvu29IKQsZksnuA9LIQoYEsvuA1LGQIWnsPiBdLGRIFLsPSBELGZLDADKArCIgLSxkSAgDyAAygAwgM4AMIKsBSAULGZLAADKADCADyOwhQNd3V4kX+dRr0WQioOvraw6gB5sABNBRQMl7Xb9cO7u3aQIQQAABVBpQ2l7Xj9fm9D2aAAQQQABVB5Sw1xvn1wQggHYBqv7EfunwmrwFKFWv906uCUAA7QJU94n96rE1eQtQkl5vn1kTgADaBahcrz2n1QQggAACqASgQr12nlMTgAACCKASgEr02n9CTQACaBeg/B/hHzmeJqvHDXfqbJoABNAuQJmf2AcPNrzJanDDnT3V8CYAAbQRUM4n9vEjTW6yqt9wGc4zuQlAAO0FlKqXkxw/CUBOApCT1ALkXx6aAAQQQADVBeTzX00AAugoIP8HrslWQH4Kp2UTgAA6B8hPImuyysH3uxCpmgAE0FFA+0+fXM+0JsUA5X/8TGsCEECnAflWnslNAAIIIICqA/r4btSpTQACKAegT6bvh7/SfEU8QCleT1E9E5oABFAaQB9/pWtek5X/hqv7+JnQBCCAMgF649FaWk/7Jiv5DVf98dO+CUAAJQP04Cvsoad3E4AAAgigZoAeeZ2d9DRuAhBAAAHUD1Dw1fbT07UJQABlBRT5xL2lnpZNVsIbruvjp2UTgABKDOjeg7exnn5NVrYbrvfjp18TgADKDejVXhX1NGsCEEAAAdQb0Eu96urp1AQggAACqD2gx3tV19OmCUAAAQTQBEAP9uqhp0cTgACqA+iRXp30NGgCEEAAATQHULBXPz3VmwAEEEAAjQJ0u1dXPaWbAAQQQABNA9T+l7/mNAEIIIAAGgjop14T9BRtAhBAZQF932sOoHJN1qj3xgAygAwgM4DsCUD/LxXsvh6ADCADyAAygMwAMoCsEiCGLKQHIAPIALK6gBiykB6ALAqIIQvpAciigBiykB6ALAqIIQvpAciigBiykB6GLKoHIIsCYshCehiyqB6GbD1y6UgPQ3ZOD0P0MGSn9WCEDkOWQA9G6GBkCehghA5G6CyYrAsasKZB+Qc5i6W4Bqq8wAAAAABJRU5ErkJggg==" style="width:36px;height:36px;border-radius:8px;" />
-        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.8</span>
+        <span id="version-label" style="font-size:9px;color:#888;white-space:nowrap;">v2.9</span>
       </div>
     </div>
   </div>
@@ -553,26 +553,15 @@ body { background: #f5f5f0; }
     <div class="modal">
       <div class="modal-handle"></div>
       <h2>&#9881;&#65039; Configurações</h2>
-      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.8</div>
-      <div style="background:#EAF3DE;border:0.5px solid #97C459;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;color:#27500A;margin-bottom:4px;">☁ Base de dados (Supabase)</div>
-        <div style="font-size:12px;color:#3a5a1a;line-height:1.5;">Os dados ficam guardados na tua base de dados e sincronizados em todos os dispositivos com login.</div>
-        <button onclick="sbLogout()" style="margin-top:10px;padding:9px 14px;background:#fff;color:#A32D2D;border:0.5px solid #A32D2D;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Terminar sessão</button>
+      <div id="setup-version" style="font-size:12px;color:#aaa;margin-bottom:12px;">Valverde App · v2.9</div>
+      <div style="background:#EAF3DE;border:0.5px solid #97C459;border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:#27500A;margin-bottom:6px;">☁ Base de dados (Supabase)</div>
+        <div id="sb-user-status" style="font-size:12px;color:#3a5a1a;line-height:1.5;margin-bottom:4px;">A verificar sessão...</div>
+        <div id="sb-conn-status" style="font-size:12px;color:#3a5a1a;line-height:1.5;margin-bottom:10px;">—</div>
+        <button onclick="sbTestar()" style="width:100%;padding:11px;background:#fff;color:#185FA5;border:0.5px solid #185FA5;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">🔍 Testar ligação e gravação</button>
+        <button onclick="sbLogout()" style="width:100%;padding:11px;background:#fff;color:#A32D2D;border:0.5px solid #A32D2D;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Terminar sessão</button>
       </div>
-      <details style="margin-bottom:10px;">
-        <summary style="font-size:12px;color:#999;cursor:pointer;">Google Sheets (antigo — já não usado)</summary>
-        <div class="info-banner" style="margin-top:8px;">
-          <p>Esta sincronização foi substituída pelo Supabase. Mantida apenas para referência.</p>
-        </div>
-      </details>
-      <div class="form-group">
-        <label class="form-label">URL atual do Google Apps Script</label>
-        <input type="text" id="setup-url" placeholder="https://script.google.com/macros/s/.../exec" />
-      </div>
-      <div id="setup-status" style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5;"></div>
-      <div id="setup-diag" style="display:none;background:#f5f5f0;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#555;font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-all;max-height:140px;overflow-y:auto;"></div>
-      <button class="btn-primary" onclick="saveSetup()">Guardar e sincronizar</button>
-      <button onclick="testLigacao()" style="width:100%;padding:12px;background:#f5f5f0;color:#185FA5;border:0.5px solid #185FA5;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;">🔍 Testar ligação</button>
+      <div id="setup-diag" style="display:none;background:#1e1e1e;color:#d4d4d4;border-radius:10px;padding:12px;margin-bottom:14px;font-size:11px;font-family:monospace;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;"></div>
       <!-- Backup / Restauro -->
       <div style="margin-top:16px;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:14px;">
         <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">💾 Backup & Restauro</div>
@@ -585,16 +574,6 @@ body { background: #f5f5f0; }
           </label>
         </div>
         <div id="backup-status" style="font-size:12px;color:#888;margin-top:6px;min-height:18px;"></div>
-      </div>
-      <!-- Migração (mantida como opção avançada) -->
-      <div style="margin-top:16px;border-top:0.5px solid rgba(0,0,0,0.1);padding-top:14px;">
-        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">Migrar para novo deployment</div>
-        <div style="font-size:12px;color:#888;margin-bottom:8px;line-height:1.5;">Cola o URL novo — os dados são copiados antes de mudar.</div>
-        <div class="form-group" style="margin-bottom:6px;">
-          <input type="text" id="migrate-url" placeholder="Novo URL do Apps Script" />
-        </div>
-        <div id="migrate-status" style="font-size:12px;color:#888;margin-bottom:6px;line-height:1.5;"></div>
-        <button onclick="migrarDados()" style="width:100%;padding:12px;background:#f5f5f0;color:#555;border:0.5px solid rgba(0,0,0,0.2);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">📦 Migrar dados para novo URL</button>
       </div>
       <button class="btn-secondary" onclick="closeModal('m-setup')">Fechar</button>
     </div>
@@ -613,9 +592,8 @@ body { background: #f5f5f0; }
 </div>
 
 <script>
-const SHEET_ID = '1EPXYbVdeFSMYnwmDFMTj5WTiIGVUKMefQKDzcikROR0';
-let SCRIPT_URL = localStorage.getItem('vv_script') || 'https://script.google.com/macros/s/AKfycbw7czEdUIerXD-ZRqjd0q4hbk_pI8PkEc2hUJuy5e9z9ue17p8gi0gMsnchHh5_tWdn/exec';
-let LOCAL = SCRIPT_URL ? false : localStorage.getItem('vv_local') === '1';
+// Endpoint do Apps Script — usado APENAS para a análise de fotos do Booking.com com IA (não é sincronização de dados).
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7czEdUIerXD-ZRqjd0q4hbk_pI8PkEc2hUJuy5e9z9ue17p8gi0gMsnchHh5_tWdn/exec';
 let S = { bookings: [], expenses: [], guests: [] };
 
 // ===================== SUPABASE =====================
@@ -683,23 +661,27 @@ async function sbLoad() {
   }
 }
 
+let sbLastError = null, sbLastSaved = null;
+
 async function sbSave() {
-  if (!sb) return;
+  if (!sb) { sbLastError = 'Cliente Supabase não inicializado (biblioteca não carregou).'; return; }
   const savingEl = document.getElementById('saving');
   if (savingEl) { savingEl.textContent='A guardar...'; savingEl.style.background='#185FA5'; savingEl.className='saving show'; }
   try {
     const { error } = await sb.from('valverde_data').upsert({ id:'main', data:S, updated_at:new Date().toISOString() });
     if (error) throw error;
+    sbLastError = null; sbLastSaved = new Date();
     if (savingEl) { savingEl.textContent='✓ Guardado'; savingEl.style.background='#0F6E56'; }
   } catch(e) {
-    if (savingEl) { savingEl.textContent='⚠ Sem ligação'; savingEl.style.background='#A32D2D'; }
+    sbLastError = (e && (e.message || e.error_description || e.hint)) ? (e.message || e.error_description || e.hint) : JSON.stringify(e);
+    if (savingEl) { savingEl.textContent='⚠ Erro ao guardar'; savingEl.style.background='#A32D2D'; }
     console.error('sbSave:', e);
   }
   if (savingEl) setTimeout(()=>{ savingEl.className='saving'; }, 2500);
 }
 
 async function initApp() {
-  if (!USE_SUPABASE || !sb) { loadData(); return; }
+  if (!USE_SUPABASE || !sb) { loadLocal(); renderAll(); return; }
   const ls = document.getElementById('login-screen');
   try {
     const { data } = await sb.auth.getSession();
@@ -754,61 +736,7 @@ function reconcileComissoes(doPersist) {
 function fmt(d) { if(!d) return ''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('pt-PT',{day:'numeric',month:'short',year:'numeric'}); }
 function euro(v) { return parseFloat(v||0).toLocaleString('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0})+' €'; }
 
-async function testLigacao() {
-  const url = document.getElementById('setup-url').value.trim() || SCRIPT_URL;
-  const st = document.getElementById('setup-status');
-  const diag = document.getElementById('setup-diag');
-  if (!url) { st.textContent = 'Cola primeiro o URL do Apps Script.'; st.style.color = '#A32D2D'; return; }
-  st.textContent = '🔄 A testar ligação...'; st.style.color = '#185FA5';
-  diag.style.display = 'block';
-  diag.textContent = 'GET ' + url + '?action=getAll\n';
-  try {
-    const t0 = Date.now();
-    const r = await fetch(url + '?action=getAll');
-    const ms = Date.now() - t0;
-    const txt = await r.text();
-    diag.textContent += `HTTP ${r.status} · ${ms}ms\n${txt.slice(0, 400)}`;
-    if (!r.ok) { st.textContent = `✗ HTTP ${r.status}`; st.style.color = '#A32D2D'; return; }
-    let d;
-    try { d = JSON.parse(txt); } catch(e) { st.textContent = '✗ Resposta não é JSON válido.'; st.style.color = '#A32D2D'; return; }
-    if (d && d.bookings !== undefined) {
-      st.textContent = `✓ Ligação OK · ${d.bookings.length} reservas · ${d.expenses?.length||0} gastos · ${d.guests?.length||0} hóspedes`;
-      st.style.color = '#0F6E56';
-    } else {
-      st.textContent = '⚠ Script responde mas estrutura inesperada.';
-      st.style.color = '#BA7517';
-    }
-  } catch(e) {
-    // CORS bloqueado — mostra dados do localStorage como confirmação
-    const local = S.bookings.length > 0 || S.guests.length > 0;
-    diag.textContent += 'CORS bloqueado (normal no GitHub Pages)\n';
-    if (local) {
-      st.textContent = `⚠ CORS bloqueado mas localStorage tem ${S.bookings.length} reservas · ${S.expenses.length} gastos · ${S.guests.length} hóspedes`;
-      st.style.color = '#BA7517';
-    } else {
-      st.textContent = '✗ Sem resposta e sem dados locais.';
-      st.style.color = '#A32D2D';
-    }
-  }
-}
 
-function saveSetup() {
-  const url = document.getElementById('setup-url').value.trim();
-  if (!url) { alert('Por favor cola o URL do Google Apps Script.'); return; }
-  SCRIPT_URL = url;
-  LOCAL = false;
-  localStorage.setItem('vv_script', url);
-  localStorage.removeItem('vv_local');
-  const st = document.getElementById('setup-status');
-  st.textContent = '🔄 A sincronizar...'; st.style.color = '#185FA5';
-  loadData(true).then(() => {
-    setTimeout(checkNotificacoes, 2000);
-    if (!st.textContent.includes('✗') && !st.textContent.includes('⚠')) {
-      st.textContent = '✓ Ligado ao Google Sheets!'; st.style.color = '#0F6E56';
-      setTimeout(() => closeModal('m-setup'), 1200);
-    }
-  });
-}
 function exportarJSON() {
   const blob = new Blob([JSON.stringify(S, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
@@ -845,178 +773,84 @@ function importarJSON(input) {
 }
 
 
-async function migrarDados() {
-  const novoUrl = document.getElementById('migrate-url').value.trim();
-  const st = document.getElementById('migrate-status');
-  if (!novoUrl) { st.textContent = 'Cola o novo URL primeiro.'; st.style.color = '#A32D2D'; return; }
-  if (!SCRIPT_URL) { st.textContent = 'Sem URL atual configurado.'; st.style.color = '#A32D2D'; return; }
-
-  st.textContent = '1/3 A ler dados do URL atual...'; st.style.color = '#185FA5';
-  try {
-    // Passo 1: ler dados do URL atual via JSONP
-    const dados = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
-    if (!dados || dados.bookings === undefined) throw new Error('Dados inválidos no URL atual');
-    st.textContent = `2/3 Lidos ${dados.bookings.length} reservas, ${dados.expenses?.length||0} gastos, ${dados.guests?.length||0} hóspedes. A gravar no novo URL...`; st.style.color = '#185FA5';
-
-    // Passo 2: gravar no novo URL via GET no-cors
-    await fetch(novoUrl + '?action=saveAll&data=' + encodeURIComponent(JSON.stringify(dados)), {
-      method: 'GET', mode: 'no-cors'
-    });
-
-    // Aguardar propagação
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Passo 3: verificar se gravou
-    st.textContent = '3/3 A verificar...'; st.style.color = '#185FA5';
-    const verificacao = await loadViaJsonp(novoUrl + '?action=getAll');
-    if (!verificacao || verificacao.bookings === undefined) throw new Error('Verificação falhou');
-
-    if (verificacao.bookings.length === dados.bookings.length) {
-      // Sucesso — mudar para o novo URL
-      SCRIPT_URL = novoUrl;
-      localStorage.setItem('vv_script', novoUrl);
-      S = verificacao;
-      localStorage.setItem('vv_data', JSON.stringify(S));
-      renderAll();
-      document.getElementById('setup-url').value = novoUrl;
-      st.textContent = `✓ Migração completa! ${verificacao.bookings.length} reservas migradas. URL atualizado.`;
-      st.style.color = '#0F6E56';
-      document.getElementById('setup-status').textContent = '✓ Ligado ao novo URL';
-      document.getElementById('setup-status').style.color = '#0F6E56';
-    } else {
-      st.textContent = `⚠ Gravou mas só ${verificacao.bookings.length} de ${dados.bookings.length} reservas. Tenta de novo.`;
-      st.style.color = '#A32D2D';
-    }
-  } catch(e) {
-    st.textContent = '✗ Erro: ' + e.message;
-    st.style.color = '#A32D2D';
-    console.error('migrarDados erro:', e);
-  }
-}
 
 
 
 function openSetup() {
-  const el = document.getElementById('setup-url');
-  if (SCRIPT_URL) el.value = SCRIPT_URL;
-  const status = document.getElementById('setup-status');
-  status.textContent = SCRIPT_URL ? '✓ Atualmente ligado ao Google Sheets' : 'Sem ligação — dados guardados localmente';
-  status.style.color = SCRIPT_URL ? '#0F6E56' : '#888';
-  document.getElementById('setup-diag').style.display = 'none';
+  const v = document.getElementById('sb-conn-status');
+  if (v) {
+    const userEmail = window.__sbUser || null;
+    let txt = '';
+    if (!window.supabase) txt = '✗ Biblioteca Supabase não carregou.';
+    else if (!sb) txt = '✗ Cliente não inicializado.';
+    else if (sbLastError) txt = '⚠ Último erro: ' + sbLastError;
+    else if (sbLastSaved) txt = '✓ Última gravação: ' + sbLastSaved.toLocaleTimeString('pt-PT');
+    else txt = 'Ligado. Ainda sem gravações nesta sessão.';
+    v.textContent = txt;
+    v.style.color = (txt[0]==='✓') ? '#0F6E56' : (txt[0]==='✗'||txt[0]==='⚠') ? '#A32D2D' : '#3a5a1a';
+  }
+  const u = document.getElementById('sb-user-status');
+  if (u && sb) { sb.auth.getUser().then(({data})=>{ window.__sbUser = data && data.user ? data.user.email : null; u.textContent = window.__sbUser ? ('👤 ' + window.__sbUser) : '⚠ Sem sessão iniciada'; u.style.color = window.__sbUser ? '#3a5a1a' : '#A32D2D'; }); }
+  const diag = document.getElementById('setup-diag');
+  if (diag) diag.style.display = 'none';
   openModal('m-setup');
 }
 
-function loadViaIframe(url) {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Timeout')), 12000);
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = url;
-    iframe.onload = function() {
-      try {
-        const txt = iframe.contentDocument ? iframe.contentDocument.body.innerText : '';
-        clearTimeout(timeout);
-        iframe.remove();
-        if (!txt) { reject(new Error('Resposta vazia')); return; }
-        const d = JSON.parse(txt);
-        resolve(d);
-      } catch(e) {
-        clearTimeout(timeout);
-        iframe.remove();
-        reject(new Error('Parse error: ' + e.message));
-      }
-    };
-    iframe.onerror = () => { clearTimeout(timeout); iframe.remove(); reject(new Error('iframe load error')); };
-    document.body.appendChild(iframe);
-  });
-}
+// Diagnóstico completo: liga, sessão, leitura e gravação de teste. Mostra o erro exato no ecrã.
+async function sbTestar() {
+  const diag = document.getElementById('setup-diag');
+  diag.style.display = 'block';
+  const log = [];
+  const print = () => { diag.textContent = log.join('\n'); };
+  log.push('A correr diagnóstico...'); print();
 
-function loadViaJsonp(url) {
-  return new Promise((resolve, reject) => {
-    const cbName = 'vv_cb_' + Date.now();
-    const script = document.createElement('script');
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      script.remove();
-      // fallback para iframe
-      loadViaIframe(url.split('&callback=')[0]).then(resolve).catch(reject);
-    }, 5000);
-    window[cbName] = function(data) {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      resolve(data);
-    };
-    script.src = url + '&callback=' + cbName;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      // fallback para iframe
-      loadViaIframe(url.split('&callback=')[0]).then(resolve).catch(reject);
-    };
-    document.head.appendChild(script);
-  });
-}
+  // 1. Biblioteca
+  if (!window.supabase) { log.push('✗ Biblioteca supabase-js NÃO carregou (verifica internet/CDN).'); print(); return; }
+  log.push('✓ Biblioteca carregada.');
+  if (!sb) { log.push('✗ Cliente não inicializado.'); print(); return; }
+  log.push('✓ Cliente inicializado.'); print();
 
-async function loadData(autoSync) {
-  loadLocal();
-  renderAll();
-  // Só tenta sincronizar do servidor se autoSync=true (chamado manualmente)
-  // No arranque normal usa sempre localStorage para não perder dados
-  if (autoSync && !LOCAL && SCRIPT_URL) {
-    try {
-      const d = await loadViaJsonp(SCRIPT_URL + '?action=getAll');
-      if (d && d.bookings !== undefined) {
-        const localEmpty = S.bookings.length === 0 && S.expenses.length === 0 && S.guests.length === 0;
-        const serverEmpty = d.bookings.length === 0 && d.expenses.length === 0 && (d.guests||[]).length === 0;
-        if (!serverEmpty || localEmpty) {
-          S = d;
-          localStorage.setItem('vv_data', JSON.stringify(S));
-          renderAll();
-        } else {
-          persist();
-        }
-        if (autoSync) {
-          const st = document.getElementById('setup-status');
-          if (st) { st.textContent = '✓ Sincronizado! ' + d.bookings.length + ' reservas'; st.style.color = '#0F6E56'; }
-        }
-      }
-    } catch(e) {
-      console.error('loadData() erro:', e);
-      if (autoSync) {
-        const st = document.getElementById('setup-status');
-        if (st) { st.textContent = '✗ Erro ao sincronizar: ' + e.message; st.style.color = '#A32D2D'; }
-      }
-    }
+  // 2. Sessão
+  try {
+    const { data } = await sb.auth.getUser();
+    if (data && data.user) log.push('✓ Sessão: ' + data.user.email);
+    else { log.push('✗ SEM sessão iniciada — faz login. Sem login, a RLS bloqueia tudo.'); print(); return; }
+  } catch(e) { log.push('✗ Erro de sessão: ' + (e.message||e)); print(); return; }
+  print();
+
+  // 3. Leitura
+  try {
+    const { data, error } = await sb.from('valverde_data').select('id,updated_at').eq('id','main').maybeSingle();
+    if (error) throw error;
+    if (data) log.push('✓ Leitura OK (linha "main" existe).');
+    else log.push('⚠ Leitura OK mas a linha "main" não existe ainda (será criada ao gravar).');
+  } catch(e) {
+    log.push('✗ ERRO DE LEITURA: ' + (e.message||e.hint||JSON.stringify(e)));
+    log.push('   → Provável: tabela "valverde_data" não existe ou RLS sem política. Corre o SQL de criação.');
+    print(); return;
   }
-  return Promise.resolve();
+  print();
+
+  // 4. Gravação de teste (linha de prova, não toca nos dados)
+  try {
+    const probe = await sb.from('valverde_data').upsert({ id:'__diag__', data:{ t: Date.now() }, updated_at:new Date().toISOString() });
+    if (probe.error) throw probe.error;
+    await sb.from('valverde_data').delete().eq('id','__diag__');
+    log.push('✓ GRAVAÇÃO OK — a base de dados aceita escrita.');
+    log.push('Tudo a funcionar. Se os dados não aparecem, é só falta de uma alteração nova para gravar.');
+  } catch(e) {
+    log.push('✗ ERRO DE GRAVAÇÃO: ' + (e.message||e.hint||JSON.stringify(e)));
+    log.push('   → Provável: política RLS não permite escrita ao utilizador autenticado. Verifica a policy "for all to authenticated".');
+  }
+  print();
 }
+
+
+
 function loadLocal() { const d=localStorage.getItem('vv_data'); if(d) S=JSON.parse(d); }
 async function persist() {
   localStorage.setItem('vv_data', JSON.stringify(S));
   if (USE_SUPABASE && sb) { sbSave(); return; }
-  if (!LOCAL && SCRIPT_URL) {
-    const savingEl = document.getElementById('saving');
-    savingEl.textContent = 'A guardar...';
-    savingEl.style.background = '#185FA5';
-    savingEl.className = 'saving show';
-    try {
-      // no-cors evita o bloqueio CORS do GitHub Pages — não lemos a resposta
-      // mas o Apps Script recebe e grava na mesma
-      await fetch(SCRIPT_URL + '?action=saveAll&data=' + encodeURIComponent(JSON.stringify(S)), {
-        method: 'GET',
-        mode: 'no-cors'
-      });
-      savingEl.textContent = '✓ Guardado';
-      savingEl.style.background = '#0F6E56';
-    } catch(e) {
-      savingEl.textContent = '⚠ Sem ligação';
-      savingEl.style.background = '#A32D2D';
-      console.error('persist() erro:', e);
-    }
-    setTimeout(() => { savingEl.className = 'saving'; }, 2500);
-  }
 }
 
 function isPortuguese(b) {
@@ -2082,7 +1916,7 @@ function filterChip(el,t,v) { el.closest('.filter-row').querySelectorAll('.filte
 
 document.addEventListener('DOMContentLoaded', function() {
   // Data automática
-  const APP_VERSION = 'v2.8';
+  const APP_VERSION = 'v2.9';
   const now = new Date();
   const dia = String(now.getDate()).padStart(2,'0');
   const mes = String(now.getMonth()+1).padStart(2,'0');
