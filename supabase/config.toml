@@ -1,0 +1,10 @@
+project_id = "valverde-algarve"
+
+[functions.create-booking-request]
+verify_jwt = false
+
+[functions.quote-booking]
+verify_jwt = false
+
+[functions.public-booking-config]
+verify_jwt = false
