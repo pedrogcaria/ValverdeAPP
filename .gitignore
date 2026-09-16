@@ -9,3 +9,4 @@ supabase/.temp/
 supabase/functions/.env
 *.local
 .DS_Store
+.vercel
