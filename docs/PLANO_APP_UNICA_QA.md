@@ -54,14 +54,15 @@ o login Supabase e RLS continuam a ser a barreira de dados.
 - [x] Variáveis públicas QA configuradas no Vercel: Supabase QA, `noindex,nofollow`, contacto e alias público. Nenhum segredo de servidor foi colocado no browser/Vercel.
 - [x] Deployment Git da branch `qa` no commit `5470785` ficou `READY`; `https://valverde-qa.vercel.app` respondeu HTTP 200 com `noindex` e headers de segurança.
 - [x] `qa.villavalverde.pt` e `qa.app.villavalverde.pt` estão associados ao mesmo projeto Vercel QA.
-- [ ] Falta criar no DNS dois registos A para `qa` e `qa.app`, ambos com destino `76.76.21.21`; a sessão da Dominios.pt expirou antes da alteração.
+- [x] DNS QA criado na Dominios.pt: registos A `qa.villavalverde.pt` e `qa.app.villavalverde.pt`, ambos para `76.76.21.21`, sem alterar nameservers nem registos de produção.
+- [x] O Vercel reconheceu os dois hostnames como corretamente configurados e verificados; foi emitido um certificado conjunto e ambos responderam HTTP 200 por HTTPS.
 - [ ] A proteção contra palavras-passe comprometidas permanece indisponível no plano Supabase Free; não subir de plano sem decisão do utilizador.
 
 ## Próxima sequência segura — QA
 
 1. [x] **Criar `valverde-qa` no Vercel** a partir da branch `qa`, com raiz do repositório e os dois domínios QA associados ao mesmo deployment.
 2. [x] **Configurar as variáveis públicas QA no Vercel** sem expor segredos de servidor.
-3. [ ] **Criar os dois registos A em Dominios.pt:** `qa` e `qa.app` para `76.76.21.21`. Não tocar no DNS de produção.
+3. [x] **Criar os dois registos A em Dominios.pt:** `qa` e `qa.app` para `76.76.21.21`, validar DNS, domínio Vercel e HTTPS. DNS de produção não foi alterado.
 4. [ ] **Completar gates:** criar `RATE_LIMIT_PEPPER`, configurar Turnstile e Resend exclusivamente nos segredos QA; rever `ALLOWED_ORIGINS` com os hostnames finais.
 5. [ ] **QA funcional:** login/reset, gestor/não gestor/anónimo, CRUD, backup, intervalos, cupões, conflito concorrente e aceitação duplicada de pedido.
 

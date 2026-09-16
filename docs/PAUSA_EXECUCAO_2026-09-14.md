@@ -47,8 +47,10 @@ produção e DNS de produção continuam fora do âmbito desta retoma.
   `https://valverde-qa.vercel.app` respondeu HTTP 200 com `noindex` e headers
   de segurança.
 - Os domínios `qa.villavalverde.pt` e `qa.app.villavalverde.pt` ficaram
-  associados ao projeto. Faltam apenas os dois registos A em Dominios.pt para
-  `76.76.21.21`; a sessão web expirou antes da escrita.
+  associados ao projeto. Foram criados na Dominios.pt os dois registos A para
+  `76.76.21.21`, sem alterar os nameservers ou o DNS de produção.
+- O Vercel confirmou ambos os hostnames como configurados e verificados. Foi
+  emitido um certificado conjunto e os dois responderam HTTP 200 por HTTPS.
 
 ## Estado da pausa original
 
@@ -82,9 +84,9 @@ foram alterados.
 
 ## Retoma segura
 
-1. Entrar novamente na Dominios.pt e criar apenas os registos A `qa` e
-   `qa.app`, ambos para `76.76.21.21`; validar propagação e os dois hostnames.
-2. Configurar Turnstile, `RATE_LIMIT_PEPPER` e Resend antes de abrir pedidos
+1. [x] Criar e validar os registos A `qa` e `qa.app`, o reconhecimento Vercel e
+   o acesso HTTPS aos dois domínios QA.
+2. [ ] Configurar Turnstile, `RATE_LIMIT_PEPPER` e Resend antes de abrir pedidos
    públicos; só depois fazer o QA funcional completo.
 
 Consultar [PLANO_APP_UNICA_QA.md](./PLANO_APP_UNICA_QA.md) para a sequência
