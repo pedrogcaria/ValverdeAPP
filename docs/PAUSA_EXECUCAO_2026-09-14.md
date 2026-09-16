@@ -2,9 +2,9 @@
 
 ## Retoma QA — 2026-09-15
 
-A pausa foi levantada apenas para o ambiente QA. Vercel, DNS, Supabase de
-produção, branch `main`, commits e pushes continuam fora do âmbito desta
-retoma.
+A pausa foi levantada apenas para o ambiente QA. Foram autorizados os commits,
+pushes e a publicação Vercel QA. Supabase de produção, branch `main`, Vercel de
+produção e DNS de produção continuam fora do âmbito desta retoma.
 
 - A migration `20260914231758_qa_security_performance_hardening.sql` foi
   aplicada por MCP no QA: removeu execução anónima de RPCs internos, moveu
@@ -38,6 +38,17 @@ retoma.
   histórico, as versões `20260825170000` e `20260914182936` foram registadas
   diretamente no SQL Editor sem executar novamente as migrations. O postflight
   confirmou as três versões esperadas, incluindo a hardening.
+- A app única foi publicada nas branches remotas `codex/unify-web` e `qa` nos
+  commits `42a7b17` e `5470785`; `main` permaneceu intocada.
+- O projeto Vercel `valverde-qa` foi criado na equipa `PD TEAM`, ligado ao
+  GitHub e configurado para publicar a branch `qa` como Vite para
+  `apps/web/dist`.
+- O deployment Git do commit `5470785` ficou `READY`. O alias estável
+  `https://valverde-qa.vercel.app` respondeu HTTP 200 com `noindex` e headers
+  de segurança.
+- Os domínios `qa.villavalverde.pt` e `qa.app.villavalverde.pt` ficaram
+  associados ao projeto. Faltam apenas os dois registos A em Dominios.pt para
+  `76.76.21.21`; a sessão web expirou antes da escrita.
 
 ## Estado da pausa original
 
@@ -62,15 +73,17 @@ foram alterados.
 
 ## Estado local
 
-- A consolidação em `apps/web`, as migrations e as Edge Functions estão no
-  worktree da branch `codex/unify-web`, sem commit nem push.
+- A consolidação em `apps/web`, as migrations e as Edge Functions estão
+  commitadas e publicadas nas branches remotas `codex/unify-web` e `qa`.
+- O worktree está limpo na branch `codex/unify-web`; a branch `main` não foi
+  alterada.
 - A validação completa da retoma passou: `npm run typecheck`, `npm run test`
   (15 Vitest + 8 Deno), `npm run build` e `git diff --check`.
 
 ## Retoma segura
 
-1. Quando houver acesso ao Vercel, criar `valverde-qa`, associar os dois
-   domínios QA e acrescentar qualquer hostname de preview a `ALLOWED_ORIGINS`.
+1. Entrar novamente na Dominios.pt e criar apenas os registos A `qa` e
+   `qa.app`, ambos para `76.76.21.21`; validar propagação e os dois hostnames.
 2. Configurar Turnstile, `RATE_LIMIT_PEPPER` e Resend antes de abrir pedidos
    públicos; só depois fazer o QA funcional completo.
 

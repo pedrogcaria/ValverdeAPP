@@ -34,6 +34,7 @@ o login Supabase e RLS continuam a ser a barreira de dados.
 - [x] Edge Functions reforçadas localmente: Zod, limite de payload, CORS estrito, rate limit 5/10 min + 20/dia, Turnstile com action/hostname e persistência do pedido mesmo se o email falhar.
 - [x] `npm run typecheck`, `npm run test` (15 Vitest + 8 Deno), `npm run build` e `git diff --check` voltaram a passar em 2026-09-16.
 - [x] Migração local `20260914231758_qa_security_performance_hardening.sql` adiciona índices de FKs, otimiza as políticas RLS, fecha RPCs internos ao anónimo e retira `btree_gist` de `public`.
+- [x] A app única foi publicada nos commits `42a7b17` e `5470785`; `codex/unify-web` e a branch remota `qa` estão alinhadas. A branch `main` não foi alterada.
 
 ## Estado remoto confirmado nesta etapa
 
@@ -48,15 +49,21 @@ o login Supabase e RLS continuam a ser a barreira de dados.
 - [x] Um pedido sintético foi bloqueado com 503 enquanto `RATE_LIMIT_PEPPER` e Turnstile estão ausentes; nenhuma linha foi criada em `booking_requests`.
 - [x] O conector MCP `supabase-qa` esteve operacional e foi usado para aplicar a hardening e publicar as Functions. Na sessão retomada em 2026-09-16 deixou de estar exposto às ferramentas disponíveis.
 - [x] A CLI local está autenticada noutra conta Supabase e só lista projetos DriverHub. A conta global não foi trocada nem foi executado `supabase link`; a reconciliação foi concluída diretamente no SQL Editor do QA confirmado.
+- [x] Vercel CLI autenticada como `pedrogcaria-5456` na equipa `PD TEAM`; projeto `valverde-qa` criado e ligado ao repositório GitHub.
+- [x] O projeto Vercel usa Vite, `npm ci`, `npm run build`, saída `apps/web/dist` e a branch de produção `qa`.
+- [x] Variáveis públicas QA configuradas no Vercel: Supabase QA, `noindex,nofollow`, contacto e alias público. Nenhum segredo de servidor foi colocado no browser/Vercel.
+- [x] Deployment Git da branch `qa` no commit `5470785` ficou `READY`; `https://valverde-qa.vercel.app` respondeu HTTP 200 com `noindex` e headers de segurança.
+- [x] `qa.villavalverde.pt` e `qa.app.villavalverde.pt` estão associados ao mesmo projeto Vercel QA.
+- [ ] Falta criar no DNS dois registos A para `qa` e `qa.app`, ambos com destino `76.76.21.21`; a sessão da Dominios.pt expirou antes da alteração.
 - [ ] A proteção contra palavras-passe comprometidas permanece indisponível no plano Supabase Free; não subir de plano sem decisão do utilizador.
 
 ## Próxima sequência segura — QA
 
-1. **Criar `valverde-qa` no Vercel** a partir da branch `qa`, com raiz do repositório (o `vercel.json` produz `apps/web/dist`). Associar os dois domínios QA ao mesmo deployment.
-2. **Só após o Vercel indicar o destino**, criar os CNAME/A exatos em dominios.pt para `qa.villavalverde.pt` e `qa.app.villavalverde.pt`. Não tocar no DNS de produção nesta fase.
-3. **Configurar as variáveis públicas QA no Vercel:** URL e chave publicável do Supabase QA, `VITE_ROBOTS_DIRECTIVE=noindex,nofollow`, contactos públicos e aliases de preview se forem necessários. Nunca colocar service role, Turnstile secret, Resend ou tokens de acesso no Vercel/browser.
-4. **Completar gates:** criar `RATE_LIMIT_PEPPER`, configurar Turnstile e Resend exclusivamente nos segredos QA; acrescentar ao `ALLOWED_ORIGINS` apenas os hostnames efetivos de Vercel/preview.
-5. **QA funcional:** login/reset, gestor/não gestor/anónimo, CRUD, backup, intervalos, cupões, conflito concorrente e aceitação duplicada de pedido.
+1. [x] **Criar `valverde-qa` no Vercel** a partir da branch `qa`, com raiz do repositório e os dois domínios QA associados ao mesmo deployment.
+2. [x] **Configurar as variáveis públicas QA no Vercel** sem expor segredos de servidor.
+3. [ ] **Criar os dois registos A em Dominios.pt:** `qa` e `qa.app` para `76.76.21.21`. Não tocar no DNS de produção.
+4. [ ] **Completar gates:** criar `RATE_LIMIT_PEPPER`, configurar Turnstile e Resend exclusivamente nos segredos QA; rever `ALLOWED_ORIGINS` com os hostnames finais.
+5. [ ] **QA funcional:** login/reset, gestor/não gestor/anónimo, CRUD, backup, intervalos, cupões, conflito concorrente e aceitação duplicada de pedido.
 
 ## Gates pendentes antes de abrir pedidos públicos
 
