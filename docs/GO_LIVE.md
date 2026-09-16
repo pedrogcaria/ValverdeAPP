@@ -16,11 +16,15 @@ dois projetos por superfície.
 
 ## 2. Cloudflare Turnstile
 
-Criar dois widgets no Cloudflare, um para o site público e outro para a gestão, restringidos a `villavalverde.pt`, `www.villavalverde.pt` e `app.villavalverde.pt` (acrescentar `localhost` apenas no widget de desenvolvimento).
+Usar a widget Cloudflare Turnstile única, restringida a `qa.villavalverde.pt`,
+`qa.app.villavalverde.pt`, `villavalverde.pt` e `app.villavalverde.pt`.
+`localhost` e `127.0.0.1` são adicionados pelo Cloudflare para desenvolvimento.
+Apesar de a widget ser partilhada, cada ambiente valida exclusivamente os seus
+próprios hostnames no servidor.
 
 - Colocar a site key pública em `VITE_TURNSTILE_SITE_KEY` de cada projeto Vercel.
-- Colocar **apenas** o segredo do widget público em `TURNSTILE_SECRET_KEY` nas Edge Functions Supabase.
-- Em Supabase Auth > CAPTCHA, ativar Turnstile com o widget da gestão. O browser envia o token no login e no reset; Supabase Auth valida-o.
+- Colocar o segredo da widget em `TURNSTILE_SECRET_KEY` nas Edge Functions Supabase de cada ambiente, sem o incluir em Vite/Vercel.
+- Em Supabase Auth > CAPTCHA, ativar Turnstile com a mesma widget. O browser envia o token no login e no reset; Supabase Auth valida-o.
 - A Edge Function `create-booking-request` valida o token diretamente no servidor; não aceitar pedidos se o token for inválido, reutilizado ou expirado.
 
 ## 3. Resend

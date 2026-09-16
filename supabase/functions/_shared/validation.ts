@@ -59,7 +59,9 @@ const bookingRequestSchema = withDateRange(z.object({
     .regex(/^[0-9+().\s-]+$/, 'O telefone tem caracteres inválidos.'),
   message: z.string().trim().max(2_000, 'A mensagem é demasiado longa.').optional()
     .transform((value) => value || undefined),
-  turnstileToken: z.string().trim().min(1, 'Conclua a verificação de segurança.').max(4_096)
+  // Turnstile tokens are opaque browser input. Keep the bounded size expected by
+  // Siteverify so oversized payloads are rejected before reaching Cloudflare.
+  turnstileToken: z.string().trim().min(1, 'Conclua a verificação de segurança.').max(2_048)
 }));
 
 export type BookingRequestInput = BookingQuoteInput & {

@@ -12,16 +12,21 @@ async function validateTurnstile(token: string, request: Request): Promise<boole
   const body = new URLSearchParams({ secret, response: token });
   const remoteIp = request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   if (remoteIp) body.set('remoteip', remoteIp);
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
-  if (!response.ok) return false;
-  const result = await response.json() as { success?: boolean; action?: string; hostname?: string };
-  return result.success === true
-    && result.action === 'booking_request'
-    && Boolean(result.hostname && expectedHostnames.includes(result.hostname.toLowerCase()));
+  try {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal: AbortSignal.timeout(10_000),
+      body
+    });
+    if (!response.ok) return false;
+    const result = await response.json() as { success?: boolean; action?: string; hostname?: string };
+    return result.success === true
+      && result.action === 'booking_request'
+      && Boolean(result.hostname && expectedHostnames.includes(result.hostname.toLowerCase()));
+  } catch {
+    return false;
+  }
 }
 
 async function hasRecentDuplicateRequest(client: ReturnType<typeof createAdminClient>, input: BookingRequestInput, ownerId: string): Promise<boolean> {

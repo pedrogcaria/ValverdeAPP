@@ -50,3 +50,21 @@ Deno.test('limita o corpo JSON antes do cálculo ou escrita', async () => {
   } catch (error) { rejected = error instanceof InputValidationError; }
   if (!rejected) throw new Error('Corpo excessivo foi aceite.');
 });
+
+Deno.test('rejeita tokens Turnstile excessivamente longos', () => {
+  let rejected = false;
+  try {
+    parseBookingRequestInput({
+      fullName: 'Ana Silva',
+      email: 'ana@example.com',
+      phone: '+351 912 345 678',
+      guestsCount: 2,
+      checkIn: '2026-08-01',
+      checkOut: '2026-08-08',
+      turnstileToken: 't'.repeat(2_049)
+    });
+  } catch (error) {
+    rejected = error instanceof InputValidationError;
+  }
+  if (!rejected) throw new Error('Token Turnstile excessivo foi aceite.');
+});

@@ -18,7 +18,7 @@ Configurar exclusivamente no Supabase, sem os guardar em ficheiros Git:
 
 - `TURNSTILE_SECRET_KEY`
 - `RESEND_API_KEY`
-- `RESEND_FROM` (ex.: `Reservas Villa Valverde <reservas@mail.villavalverde.pt>`)
+- `RESEND_FROM` (ex.: `Villa Valverde <reservas@contact.villavalverde.pt>`)
 - `BOOKING_NOTIFICATION_TO`
 - `BOOKING_REPLY_TO`
 - `ALLOWED_ORIGINS` (lista separada por vírgulas; no QA incluir apenas localhost e hostnames QA. Só acrescentar produção após autorização própria)
