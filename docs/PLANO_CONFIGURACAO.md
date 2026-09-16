@@ -1,5 +1,10 @@
 # Plano de configuração — Villa Valverde
 
+> **Histórico:** este ficheiro descreve a arquitetura anterior com duas apps.
+> O plano operacional atual é [PLANO_APP_UNICA_QA.md](PLANO_APP_UNICA_QA.md).
+> Não usar as instruções históricas daqui para publicar, alterar DNS ou aplicar
+> migrations.
+
 ## Revisão técnica de 2026-09-08
 
 Ver `REVIEW_MIGRACAO_2026-09-08.md` antes de continuar o lançamento. Corrigida localmente a FK ambígua dos gastos e a extração de mensagens PostgREST; consulta QA corrigida respondeu HTTP 200. Typecheck, builds e 10 testes passaram. Confirmados problemas pendentes em comissão duplicada nos totais, aprovação não atómica, conflitos apenas no frontend, checklist legada, reimportação, datas impossíveis e regras de cupões. Nenhuma escrita remota/produção nesta revisão. GitHub main continua no legado `dc71643`; conversão local ainda untracked. Não considerar a migração aceite até resolver/validar os findings prioritários.

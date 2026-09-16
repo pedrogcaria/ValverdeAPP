@@ -5,7 +5,7 @@ import process from 'node:process';
 const sourcePath = process.argv[2] || '/Users/diogo/Downloads/valverde_algarve_2.html';
 const outputRoot = path.resolve(process.cwd());
 const legacyDirectory = path.join(outputRoot, 'legacy');
-const imagesDirectory = path.join(outputRoot, 'apps/site/public/images');
+const imagesDirectory = path.join(outputRoot, 'apps/web/public/images');
 const source = await readFile(sourcePath, 'utf8');
 
 await mkdir(legacyDirectory, { recursive: true });

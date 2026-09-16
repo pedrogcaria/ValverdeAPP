@@ -4,7 +4,9 @@
 
 Este projeto será ligado exclusivamente às **novas** contas GitHub, Supabase e Vercel destinadas à Villa Valverde. Antes de qualquer publicação ou alteração remota, confirmar a identidade da conta/equipa e o nome do projeto; não reutilizar uma sessão, projeto ou organização local já configurada noutro trabalho.
 
-O repositório remoto de destino deve ser indicado pela conta `DiogoPardal` depois de concedido o acesso. Só então se cria o push inicial e os dois projetos Vercel.
+O repositório remoto é `pedrogcaria/ValverdeAPP`. A publicação usa uma única
+app Vite (`apps/web`) e dois projetos Vercel no total — um por ambiente —, não
+dois projetos por superfície.
 
 ## 1. Supabase e migração
 
@@ -37,12 +39,14 @@ Criar dois widgets no Cloudflare, um para o site público e outro para a gestão
 
 Criar dois projetos ligados ao repositório GitHub da conta `DiogoPardal`:
 
-| Projeto | Root Directory | Domínios | Variáveis públicas |
-| --- | --- | --- | --- |
-| `villa-valverde-site` | `apps/site` | `villavalverde.pt`, `www.villavalverde.pt` | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_TURNSTILE_SITE_KEY`, `VITE_CONTACT_EMAIL`, `VITE_ADMIN_URL` |
-| `villa-valverde-admin` | `apps/admin` | `app.villavalverde.pt` | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_TURNSTILE_SITE_KEY`, `VITE_BOOKING_IMPORT_ENDPOINT` |
+| Projeto | Branch | Root Directory | Domínios | Variáveis públicas |
+| --- | --- | --- | --- | --- |
+| `valverde-qa` | `qa` | raiz do repositório | `qa.villavalverde.pt`, `qa.app.villavalverde.pt` | valores públicos do Supabase QA, `VITE_ROBOTS_DIRECTIVE=noindex,nofollow` |
+| `valverde-prd` | `main` | raiz do repositório | `villavalverde.pt`, `www.villavalverde.pt`, `app.villavalverde.pt` | valores públicos do Supabase PRD, `VITE_ROBOTS_DIRECTIVE=index,follow` |
 
-Ativar previews por branch. Os valores `VITE_*` são públicos; nunca colocar qualquer segredo no Vercel para estas SPAs.
+O `vercel.json` da raiz já define a build e o output `apps/web/dist`. Associar
+os dois hostnames do mesmo ambiente ao mesmo deployment. Os valores `VITE_*`
+são públicos; nunca colocar qualquer segredo no Vercel para estas SPAs.
 
 ## 5. DNS no dominios.pt
 

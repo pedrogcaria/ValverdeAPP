@@ -2,11 +2,18 @@ import { corsHeaders, isAllowedOrigin, json } from '../_shared/http.ts';
 import { createAdminClient } from '../_shared/supabase.ts';
 
 function monthStart(date: Date): string {
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-01`;
+  return String(date.getUTCFullYear())
+    + '-'
+    + String(date.getUTCMonth() + 1).padStart(2, '0')
+    + '-01';
 }
 
 Deno.serve(async (request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(request) });
+  if (request.method === 'OPTIONS') {
+    return isAllowedOrigin(request)
+      ? new Response(null, { status: 204, headers: corsHeaders(request) })
+      : json(request, { error: 'Origem não permitida.' }, 403);
+  }
   if (request.method !== 'POST') return json(request, { error: 'Método não permitido.' }, 405);
   if (!isAllowedOrigin(request)) return json(request, { error: 'Origem não permitida.' }, 403);
 
@@ -42,7 +49,9 @@ Deno.serve(async (request) => {
         startsOn: rate.starts_on,
         endsOn: rate.ends_on,
         bookingReferenceNightlyPrice: rate.booking_reference_nightly_price === null ? null : Number(rate.booking_reference_nightly_price),
-        directNightlyPrice: Number(rate.direct_nightly_price)
+        directNightlyPrice: rate.booking_reference_nightly_price === null
+          ? Number(rate.direct_nightly_price)
+          : Number(rate.booking_reference_nightly_price) * (1 - Number(settings.direct_discount_percent) / 100)
       }))
     });
   } catch (error) {

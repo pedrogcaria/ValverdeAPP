@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/web"
   ],
   "scripts": {
-    "dev:site": "npm run dev --workspace=@valverde/site",
-    "dev:admin": "npm run dev --workspace=@valverde/admin",
+    "dev:site": "VITE_DEV_SURFACE=public npm run dev --workspace=@valverde/web -- --port 4173",
+    "dev:admin": "VITE_DEV_SURFACE=admin npm run dev --workspace=@valverde/web -- --port 4174",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present && deno test supabase/functions/_shared/pricing_test.ts",
+    "test": "npm run test --workspaces --if-present && deno test --allow-env supabase/functions/_shared/pricing_test.ts supabase/functions/_shared/validation_test.ts supabase/functions/_shared/rate-limit_test.ts supabase/functions/_shared/http_test.ts",
     "extract:legacy-assets": "node scripts/extract-legacy-assets.mjs"
   },
   "devDependencies": {
@@ -20,6 +20,7 @@
     "jsdom": "^26.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "zod": "3.24.2"
   }
 }

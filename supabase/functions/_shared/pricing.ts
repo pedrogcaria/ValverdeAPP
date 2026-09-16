@@ -14,6 +14,7 @@ export type BookingQuote = {
   checkOut: string;
   nights: number;
   baseAmount: number;
+  directDiscountAmount: number;
   heatedPoolAmount: number;
   promoAmount: number;
   totalAmount: number;
@@ -25,13 +26,16 @@ export type BookingQuote = {
 type Rate = {
   starts_on: string;
   ends_on: string;
+  booking_reference_nightly_price: number | string | null;
   direct_nightly_price: number | string;
 };
 
 function utcDate(value: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('As datas têm de usar o formato AAAA-MM-DD.');
   const date = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) throw new Error('Uma das datas não é válida.');
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    throw new Error('Uma das datas não é válida.');
+  }
   return date;
 }
 
@@ -52,6 +56,7 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
   if (!Number.isInteger(input.guestsCount) || input.guestsCount < 1 || input.guestsCount > 9) {
     throw new Error('Indique entre 1 e 9 hóspedes.');
   }
+  if (nights < 1 || nights > 90) throw new Error('A estadia tem de ter entre 1 e 90 noites.');
 
   const { data: settings, error: settingsError } = await client
     .from('property_settings')
@@ -65,20 +70,32 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
   const finalNight = new Date(checkOut.getTime() - millisecondsPerDay);
   const { data: rates, error: ratesError } = await client
     .from('seasonal_rates')
-    .select('starts_on, ends_on, direct_nightly_price')
+    .select('starts_on, ends_on, booking_reference_nightly_price, direct_nightly_price')
     .eq('owner_id', settings.owner_id)
     .eq('active', true)
     .lte('starts_on', isoDate(finalNight))
-    .gte('ends_on', isoDate(checkIn));
+    .gte('ends_on', isoDate(checkIn))
+    .order('starts_on');
 
   if (ratesError) throw new Error('Não foi possível consultar os preços atuais.');
 
+  let bookingReferenceAmount = 0;
   let baseAmount = 0;
   for (let day = new Date(checkIn); day < checkOut; day.setUTCDate(day.getUTCDate() + 1)) {
     const dayIso = isoDate(day);
     const rate = (rates as Rate[] | null)?.find((candidate) => candidate.starts_on <= dayIso && candidate.ends_on >= dayIso);
     if (!rate) throw new Error(`Ainda não existe um preço definido para ${dayIso}.`);
-    baseAmount += Number(rate.direct_nightly_price);
+    const storedDirectPrice = Number(rate.direct_nightly_price);
+    const bookingReferencePrice = rate.booking_reference_nightly_price === null
+      ? storedDirectPrice
+      : Number(rate.booking_reference_nightly_price);
+    // O legado calculava a vantagem direta e o cupão ambos a partir da tarifa
+    // Booking. Mantemos essa regra; a tarifa direta é só fallback sem referência.
+    const directPrice = rate.booking_reference_nightly_price === null
+      ? storedDirectPrice
+      : bookingReferencePrice * (1 - Number(settings.direct_discount_percent) / 100);
+    bookingReferenceAmount += bookingReferencePrice;
+    baseAmount += directPrice;
   }
 
   let promoDiscountPercent = 0;
@@ -101,17 +118,19 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
   const heatedPoolAmount = input.heatedPool
     ? Math.ceil(nights / 7) * Number(settings.heated_pool_weekly_price)
     : 0;
-  const promoAmount = roundCurrency(baseAmount * (promoDiscountPercent / 100));
+  const roundedBaseAmount = roundCurrency(baseAmount);
+  const promoAmount = Math.min(roundedBaseAmount, roundCurrency(bookingReferenceAmount * (promoDiscountPercent / 100)));
 
   return {
     ownerId: settings.owner_id,
     checkIn: input.checkIn,
     checkOut: input.checkOut,
     nights,
-    baseAmount: roundCurrency(baseAmount),
+    baseAmount: roundedBaseAmount,
+    directDiscountAmount: roundCurrency(bookingReferenceAmount - baseAmount),
     heatedPoolAmount: roundCurrency(heatedPoolAmount),
     promoAmount,
-    totalAmount: roundCurrency(baseAmount - promoAmount + heatedPoolAmount),
+    totalAmount: roundCurrency(roundedBaseAmount - promoAmount + heatedPoolAmount),
     directDiscountPercent: Number(settings.direct_discount_percent),
     promoDiscountPercent,
     currency: settings.currency

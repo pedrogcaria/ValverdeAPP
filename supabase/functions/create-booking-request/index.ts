@@ -1,22 +1,14 @@
 import { corsHeaders, isAllowedOrigin, json } from '../_shared/http.ts';
-import { calculateBookingQuote, hasReservationConflict, type BookingQuoteInput } from '../_shared/pricing.ts';
+import { calculateBookingQuote, hasReservationConflict } from '../_shared/pricing.ts';
+import { enforceBookingRequestRateLimit, RateLimitConfigurationError, RateLimitError } from '../_shared/rate-limit.ts';
 import { createAdminClient } from '../_shared/supabase.ts';
-
-type BookingRequestInput = BookingQuoteInput & {
-  fullName: string;
-  email: string;
-  phone: string;
-  message?: string;
-  turnstileToken: string;
-};
-
-function emailIsValid(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+import { type BookingRequestInput, InputValidationError, parseBookingRequestInput, readPublicJson } from '../_shared/validation.ts';
 
 async function validateTurnstile(token: string, request: Request): Promise<boolean> {
   const secret = Deno.env.get('TURNSTILE_SECRET_KEY');
-  if (!secret || !token) return false;
+  const expectedHostnames = (Deno.env.get('TURNSTILE_ALLOWED_HOSTNAMES') ?? '')
+    .split(',').map((hostname) => hostname.trim().toLowerCase()).filter(Boolean);
+  if (!secret || !token || expectedHostnames.length === 0) return false;
   const body = new URLSearchParams({ secret, response: token });
   const remoteIp = request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   if (remoteIp) body.set('remoteip', remoteIp);
@@ -26,8 +18,26 @@ async function validateTurnstile(token: string, request: Request): Promise<boole
     body
   });
   if (!response.ok) return false;
-  const result = await response.json() as { success?: boolean };
-  return result.success === true;
+  const result = await response.json() as { success?: boolean; action?: string; hostname?: string };
+  return result.success === true
+    && result.action === 'booking_request'
+    && Boolean(result.hostname && expectedHostnames.includes(result.hostname.toLowerCase()));
+}
+
+async function hasRecentDuplicateRequest(client: ReturnType<typeof createAdminClient>, input: BookingRequestInput, ownerId: string): Promise<boolean> {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60_000).toISOString();
+  const { data, error } = await client
+    .from('booking_requests')
+    .select('id')
+    .eq('owner_id', ownerId)
+    .eq('email', input.email)
+    .eq('check_in', input.checkIn)
+    .eq('check_out', input.checkOut)
+    .in('status', ['new', 'contacted'])
+    .gte('created_at', tenMinutesAgo)
+    .limit(1);
+  if (error) throw new Error('Não foi possível validar pedidos repetidos.');
+  return Boolean(data?.length);
 }
 
 async function notifyManager(input: BookingRequestInput, requestId: string, total: number, currency: string) {
@@ -38,23 +48,28 @@ async function notifyManager(input: BookingRequestInput, requestId: string, tota
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: 'Bearer ' + apiKey,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       from,
       to: [to],
       reply_to: Deno.env.get('BOOKING_REPLY_TO') || input.email,
-      subject: `Novo pedido de reserva — ${input.checkIn} a ${input.checkOut}`,
+      subject: 'Novo pedido de reserva — ' + input.checkIn + ' a ' + input.checkOut,
       text: [
-        `Pedido ${requestId}`,
-        `Nome: ${input.fullName}`,
-        `Email: ${input.email}`,
-        `Telefone: ${input.phone}`,
-        `Hóspedes: ${input.guestsCount}`,
-        `Check-in: ${input.checkIn}`,
-        `Check-out: ${input.checkOut}`,
-        `Piscina aquecida: ${input.heatedPool ? 'Sim' : 'Não'}`,
-        `Total estimado: ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency }).format(total)}`,
-        `Mensagem: ${input.message?.trim() || '(sem mensagem)'}`
+        'Pedido ' + requestId,
+        'Nome: ' + input.fullName,
+        'Email: ' + input.email,
+        'Telefone: ' + input.phone,
+        'Hóspedes: ' + input.guestsCount,
+        'Check-in: ' + input.checkIn,
+        'Check-out: ' + input.checkOut,
+        'Piscina aquecida: ' + (input.heatedPool ? 'Sim' : 'Não'),
+        'Total estimado: ' + new Intl.NumberFormat('pt-PT', {
+          style: 'currency', currency
+        }).format(total),
+        'Mensagem: ' + (input.message?.trim() || '(sem mensagem)')
       ].join('\n')
     })
   });
@@ -63,24 +78,28 @@ async function notifyManager(input: BookingRequestInput, requestId: string, tota
 }
 
 Deno.serve(async (request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(request) });
+  if (request.method === 'OPTIONS') {
+    return isAllowedOrigin(request)
+      ? new Response(null, { status: 204, headers: corsHeaders(request) })
+      : json(request, { error: 'Origem não permitida.' }, 403);
+  }
   if (request.method !== 'POST') return json(request, { error: 'Método não permitido.' }, 405);
   if (!isAllowedOrigin(request)) return json(request, { error: 'Origem não permitida.' }, 403);
 
   try {
-    const input = await request.json() as BookingRequestInput;
-    if (!input.fullName?.trim() || !input.phone?.trim() || !emailIsValid(input.email ?? '')) {
-      return json(request, { error: 'Preencha nome, email e telefone válidos.' }, 400);
-    }
-    if (input.message && input.message.length > 2_000) return json(request, { error: 'A mensagem é demasiado longa.' }, 400);
+    const input = parseBookingRequestInput(await readPublicJson(request));
+    const client = createAdminClient();
+    await enforceBookingRequestRateLimit(client, request);
     if (!await validateTurnstile(input.turnstileToken, request)) {
       return json(request, { error: 'A verificação de segurança expirou. Tente novamente.' }, 400);
     }
 
-    const client = createAdminClient();
     const quote = await calculateBookingQuote(client, input);
     if (await hasReservationConflict(client, quote)) {
       return json(request, { error: 'Essas datas já não estão disponíveis. Escolha outras datas.' }, 409);
+    }
+    if (await hasRecentDuplicateRequest(client, input, quote.ownerId)) {
+      return json(request, { error: 'Já recebemos um pedido igual recentemente. Aguarde a resposta do gestor.' }, 409);
     }
 
     const { data: bookingRequest, error: insertError } = await client
@@ -107,17 +126,35 @@ Deno.serve(async (request) => {
       .single();
     if (insertError || !bookingRequest) throw new Error('Não foi possível guardar o pedido.');
 
+    let notificationStatus: 'sent' | 'failed' = 'failed';
     try {
       await notifyManager(input, bookingRequest.id, quote.totalAmount, quote.currency);
-      await client.from('booking_requests').update({ notification_status: 'sent', notification_error: null }).eq('id', bookingRequest.id);
+      notificationStatus = 'sent';
     } catch (notificationError) {
-      const message = notificationError instanceof Error ? notificationError.message : 'Erro de notificação.';
-      await client.from('booking_requests').update({ notification_status: 'failed', notification_error: message }).eq('id', bookingRequest.id);
+      console.error(
+        'A notificação do pedido de reserva falhou.',
+        notificationError instanceof Error ? notificationError.name : 'unknown'
+      );
+    }
+    const notificationUpdate = await client.from('booking_requests')
+      .update({
+        notification_status: notificationStatus,
+        notification_error: notificationStatus === 'failed' ? 'Notificação pendente de nova tentativa.' : null
+      })
+      .eq('id', bookingRequest.id);
+    if (notificationUpdate.error) {
+      console.error('Não foi possível atualizar o estado de notificação do pedido.');
     }
 
-    return json(request, { requestId: bookingRequest.id, quote });
+    return json(request, { requestId: bookingRequest.id, quote, notificationStatus });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Não foi possível enviar o pedido.';
-    return json(request, { error: message }, 400);
+    if (error instanceof InputValidationError) return json(request, { error: error.message }, 400);
+    if (error instanceof RateLimitError) return json(request, { error: error.message }, 429);
+    if (error instanceof RateLimitConfigurationError) return json(request, { error: error.message }, 503);
+    console.error(
+      'Não foi possível processar o pedido de reserva.',
+      error instanceof Error ? error.name : 'unknown'
+    );
+    return json(request, { error: 'Não foi possível enviar o pedido. Tente novamente.' }, 500);
   }
 });
