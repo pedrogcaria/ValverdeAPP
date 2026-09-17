@@ -4,7 +4,6 @@ type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
   remove: (widgetId: string) => void;
   reset: (widgetId: string) => void;
-  ready: (callback: () => void) => void;
 };
 
 declare global {
@@ -41,7 +40,7 @@ export function Turnstile({ action, onTokenChange, resetSignal = 0 }: Props) {
   useEffect(() => {
     if (!siteKey) { setMessage('A proteção anti-bot será ativada antes da publicação.'); return; }
     let disposed = false;
-    loadTurnstile().then((turnstile) => turnstile.ready(() => {
+    loadTurnstile().then((turnstile) => {
       if (disposed || !container.current) return;
       widgetId.current = turnstile.render(container.current, {
         sitekey: siteKey, theme: 'light', size: 'flexible', action,
@@ -49,7 +48,7 @@ export function Turnstile({ action, onTokenChange, resetSignal = 0 }: Props) {
         'expired-callback': () => { onTokenChange(null); setMessage('A verificação expirou. Confirma novamente.'); },
         'error-callback': () => { onTokenChange(null); setMessage('Não foi possível concluir a verificação.'); }
       });
-    })).catch((error: Error) => setMessage(error.message));
+    }).catch((error: Error) => setMessage(error.message));
     return () => { disposed = true; if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current); widgetId.current = undefined; };
   }, [action, onTokenChange, siteKey]);
 

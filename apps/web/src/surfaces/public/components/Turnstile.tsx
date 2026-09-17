@@ -4,7 +4,6 @@ type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
   remove: (widgetId: string) => void;
   reset: (widgetId: string) => void;
-  ready: (callback: () => void) => void;
 };
 
 declare global {
@@ -51,7 +50,7 @@ export function Turnstile({ onTokenChange, resetSignal = 0 }: Props) {
 
     let disposed = false;
     loadTurnstile()
-      .then((turnstile) => turnstile.ready(() => {
+      .then((turnstile) => {
         if (disposed || !container.current) return;
         widgetId.current = turnstile.render(container.current, {
           sitekey: siteKey,
@@ -71,7 +70,7 @@ export function Turnstile({ onTokenChange, resetSignal = 0 }: Props) {
             setMessage('Não foi possível concluir a verificação.');
           }
         });
-      }))
+      })
       .catch((error: Error) => setMessage(error.message));
 
     return () => {
