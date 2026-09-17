@@ -75,7 +75,7 @@ async function notifyManager(input: BookingRequestInput, requestId: string, tota
           style: 'currency', currency
         }).format(total),
         'Mensagem: ' + (input.message?.trim() || '(sem mensagem)')
-      ].join('\n')
+      ].join(String.fromCharCode(10))
     })
   });
 
