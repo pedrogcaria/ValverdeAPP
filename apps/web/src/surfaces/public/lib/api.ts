@@ -5,9 +5,27 @@ function requireClient() {
   return getSupabase();
 }
 
+async function normalizeFunctionError(error: unknown): Promise<Error> {
+  const context = error && typeof error === 'object' && 'context' in error
+    ? (error as { context?: unknown }).context
+    : undefined;
+
+  if (context && typeof context === 'object' && 'clone' in context && typeof context.clone === 'function') {
+    try {
+      const response = context as Response;
+      const body = await response.clone().json() as { error?: unknown };
+      if (typeof body.error === 'string' && body.error.trim()) return new Error(body.error);
+    } catch {
+      // Keep Supabase's original error when the response is not JSON.
+    }
+  }
+
+  return error instanceof Error ? error : new Error('Não foi possível contactar o servidor.');
+}
+
 async function invoke<T>(name: string, body: unknown): Promise<T> {
   const { data, error } = await requireClient().functions.invoke<T>(name, { body: body as Record<string, unknown> });
-  if (error) throw error;
+  if (error) throw await normalizeFunctionError(error);
   if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
     throw new Error(data.error);
   }
