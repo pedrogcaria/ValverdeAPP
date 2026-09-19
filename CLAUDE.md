@@ -175,10 +175,14 @@ npm run build        # build de produção tem de passar
 
 ### 5.4. CI/CD no GitHub
 
-O repositório **ainda não tem workflow de CI**. Quando o Pedro pedir o primeiro
-push para QA, criar `.github/workflows/ci.yml` que corra, em cada push e pull
-request para `quality`: `npm ci`, `npm run typecheck`, `npm run test`,
-`npm run build`. Confirmar que passa a verde **antes** do merge.
+O workflow `.github/workflows/ci.yml` corre `npm ci`, `npm run typecheck`,
+`npm run test` e `npm run build` em Ubuntu com Node 24 e Deno 2.
+
+Dispara em qualquer push, exceto na branch `production`, e em todos os pull
+requests para `quality` e `production`.
+
+**Confirmar que o CI está verde antes de qualquer merge para `quality`.**
+Se estiver vermelho, corrigir na branch de trabalho, nunca forçar o merge.
 
 ---
 
