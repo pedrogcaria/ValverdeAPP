@@ -173,6 +173,16 @@ npm run build        # build de produção tem de passar
   browser bloqueia em silêncio.
 - O `outputDirectory` continua `apps/web/dist`.
 
+**Previews de branch:** cada push de uma branch de trabalho gera uma preview nos
+dois projetos, `valverde-prd` e `valverde-qa`. Isto **não** toca em produção: as
+variáveis de ambiente dos dois projetos estão definidas apenas para o target
+`production`, por isso as previews ficam sem `VITE_SUPABASE_URL` e sem chave, e o
+cliente Supabase fica `null` (ver `apps/web/src/lib/supabase.ts`). A preview mostra
+a interface, mas não liga a nenhuma base de dados. Falha fechada, que é o desejado.
+
+Consequência prática: **as previews não servem para testar dados.** O teste real
+faz-se localmente ou em QA, depois do merge.
+
 ### 5.4. CI/CD no GitHub
 
 O workflow `.github/workflows/ci.yml` corre `npm ci`, `npm run typecheck`,
