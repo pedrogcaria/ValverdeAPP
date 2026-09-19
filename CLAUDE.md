@@ -64,10 +64,18 @@ superfícies**, e isso tem de ser dito e testado nas duas.
 | branch de trabalho | (preview automática) | URL `.vercel.app` gerado | QA | Sim, é aqui que se trabalha |
 
 **Atenção — armadilha de nomes:** o ambiente de QA é servido pela branch
-**`quality`**, não pela branch chamada `qa`. A branch `qa` alimenta apenas os
-projetos `valverde-site` e `valverde-admin`, que só têm domínios `.vercel.app`,
-sem variáveis de ambiente configuradas. São legado da migração, ainda por rever
-com o Pedro. Não usar, não apagar sem autorização.
+**`quality`**, não pela branch chamada `qa`. A branch `qa` está desatualizada e
+não alimenta nenhum ambiente ativo.
+
+**Projetos Vercel desativados:** `valverde-site` e `valverde-admin` foram
+**pausados em 2026-09-19**. Eram sobras da arquitetura anterior à unificação
+(commit `42a7b17`): estavam configurados para construir `apps/site` e
+`apps/admin`, diretórios que já não existem. Só continuavam a funcionar porque o
+`vercel.json` da raiz se sobrepõe às definições do painel, e por isso serviam uma
+cópia idêntica da app unificada, sem domínio próprio e sem base de dados.
+
+Custavam uma build extra em cada push. Pausados, os `.vercel.app` devolvem 503 e
+não há mais builds. **A decidir:** se nada reclamar, apagar em definitivo.
 
 Equipa Vercel: `pd-team1` (`team_57NAW4cQ2Uzf94yKlrtMk8D0`).
 Repositório: `pedrogcaria/ValverdeAPP`, default branch `production`.
@@ -240,6 +248,17 @@ migration de reversão antes de aplicar a original em QA.
   `main` apagada; GitHub Pages desativado (o alojamento é na Vercel).
   Tags de rollback: `backup/main-pre-migracao-2026-09-19` (`dc71643`) e
   `backup/production-pre-migracao-2026-09-19` (`8939849`).
+
+- **2026-09-19** — Projetos Vercel `valverde-site` (`prj_hilWbL75YangXcAwPDm8R5hd3ECi`)
+  e `valverde-admin` (`prj_vorxbfmzmEqfWO8z52B0OMoLVtPZ`) pausados. Reversível:
+
+  ```bash
+  vercel api -X POST "/v1/projects/<id>/unpause?teamId=team_57NAW4cQ2Uzf94yKlrtMk8D0"
+  ```
+
+  Verificado depois da pausa: `villavalverde.pt`, `app.villavalverde.pt`,
+  `qa.villavalverde.pt` e `qa.app.villavalverde.pt` continuam em 200; os dois
+  `.vercel.app` pausados devolvem 503.
 
 ---
 
