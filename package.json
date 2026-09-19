@@ -6,8 +6,8 @@
     "apps/web"
   ],
   "scripts": {
-    "dev:site": "VITE_DEV_SURFACE=public npm run dev --workspace=@valverde/web -- --port 4173",
-    "dev:admin": "VITE_DEV_SURFACE=admin npm run dev --workspace=@valverde/web -- --port 4174",
+    "dev:site": "cross-env VITE_DEV_SURFACE=public npm run dev --workspace=@valverde/web -- --port 4173",
+    "dev:admin": "cross-env VITE_DEV_SURFACE=admin npm run dev --workspace=@valverde/web -- --port 4174",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present && deno test --allow-env supabase/functions/_shared/pricing_test.ts supabase/functions/_shared/validation_test.ts supabase/functions/_shared/rate-limit_test.ts supabase/functions/_shared/http_test.ts",
@@ -17,6 +17,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^10.1.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
