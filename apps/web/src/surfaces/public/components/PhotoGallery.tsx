@@ -6,7 +6,7 @@ type GalleryTab = 'exterior' | 'living' | 'bedrooms' | 'bathrooms';
 const galleries: Record<GalleryTab, string[]> = {
   exterior: ['pool3', 'pool2', 'pool1', 'pool4'],
   living: ['living1', 'living2', 'kitchen', 'living3'],
-  bedrooms: ['bed-suite', 'bed2', 'bed3', 'bed4', 'twin'],
+  bedrooms: ['bed-suite', 'bed2', 'bed3', 'bed4'],
   bathrooms: ['bath1', 'bath2', 'bath3', 'bath4']
 };
 
