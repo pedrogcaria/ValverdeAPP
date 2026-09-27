@@ -48,7 +48,9 @@ const en = {
     titleStart: 'Discover every',
     titleEmphasis: 'space.',
     tabsLabel: 'Villa gallery',
-    tabs: { exterior: 'Exterior & pool', living: 'Living room & kitchen', bedrooms: 'Bedrooms', bathrooms: 'Bathrooms' },
+    tabs: { exterior: 'Exterior & pool', living: 'Living room & kitchen', bedrooms: 'Bedrooms', bathrooms: 'Bathrooms', plan: 'Floor plan' },
+    planAlt: 'Illustrated floor plan of Villa Valverde, seen from above',
+    planNote: 'Illustrative image. Furniture and garden may differ from the villa.',
     openPhoto: (section: string) => `Open photo: ${section}`,
     enlarged: 'Enlarged photo',
     closePhoto: 'Close photo'
@@ -204,7 +206,9 @@ const pt: Messages = {
     titleStart: 'Descubra cada',
     titleEmphasis: 'espaço.',
     tabsLabel: 'Galeria da villa',
-    tabs: { exterior: 'Exterior & piscina', living: 'Sala & cozinha', bedrooms: 'Quartos', bathrooms: 'Casas de banho' },
+    tabs: { exterior: 'Exterior & piscina', living: 'Sala & cozinha', bedrooms: 'Quartos', bathrooms: 'Casas de banho', plan: 'Planta' },
+    planAlt: 'Planta ilustrada da Villa Valverde, vista de cima',
+    planNote: 'Imagem ilustrativa. O mobiliário e o jardim podem diferir da villa.',
     openPhoto: (section) => `Abrir fotografia: ${section}`,
     enlarged: 'Fotografia ampliada',
     closePhoto: 'Fechar fotografia'
