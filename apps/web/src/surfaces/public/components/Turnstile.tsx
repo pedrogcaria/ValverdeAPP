@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '../i18n/context';
+import type { Messages } from '../i18n/messages';
 
 type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
@@ -12,6 +14,14 @@ declare global {
   }
 }
 
+type TurnstileMessage = keyof Messages['turnstile'];
+
+class TurnstileLoadError extends Error {
+  constructor(readonly key: TurnstileMessage) {
+    super(key);
+  }
+}
+
 let loader: Promise<TurnstileApi> | undefined;
 
 function loadTurnstile(): Promise<TurnstileApi> {
@@ -22,8 +32,8 @@ function loadTurnstile(): Promise<TurnstileApi> {
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async = true;
     script.defer = true;
-    script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error('Turnstile indisponível.'));
-    script.onerror = () => reject(new Error('Não foi possível carregar a proteção de segurança.'));
+    script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new TurnstileLoadError('unavailable'));
+    script.onerror = () => reject(new TurnstileLoadError('loadFailed'));
     document.head.appendChild(script);
   });
   loader = pending;
@@ -37,14 +47,16 @@ type Props = {
 };
 
 export function Turnstile({ onTokenChange, resetSignal = 0 }: Props) {
+  const { t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
-  const [message, setMessage] = useState<string>();
+  // Guarda-se a chave e não o texto, para a mensagem acompanhar a troca de língua.
+  const [message, setMessage] = useState<TurnstileMessage>();
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
     if (!siteKey) {
-      setMessage('A verificação de segurança será ativada antes da publicação.');
+      setMessage('pending');
       return;
     }
 
@@ -63,15 +75,15 @@ export function Turnstile({ onTokenChange, resetSignal = 0 }: Props) {
           },
           'expired-callback': () => {
             onTokenChange(null);
-            setMessage('A verificação expirou. Confirma novamente antes de enviar.');
+            setMessage('expired');
           },
           'error-callback': () => {
             onTokenChange(null);
-            setMessage('Não foi possível concluir a verificação.');
+            setMessage('failed');
           }
         });
       })
-      .catch((error: Error) => setMessage(error.message));
+      .catch((error: unknown) => setMessage(error instanceof TurnstileLoadError ? error.key : 'loadFailed'));
 
     return () => {
       disposed = true;
@@ -91,7 +103,7 @@ export function Turnstile({ onTokenChange, resetSignal = 0 }: Props) {
   return (
     <div className="turnstile-wrap">
       <div ref={container} />
-      {message && <p className="field-help field-help--warning">{message}</p>}
+      {message && <p className="field-help field-help--warning">{t.turnstile[message]}</p>}
     </div>
   );
 }
