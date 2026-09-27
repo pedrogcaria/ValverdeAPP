@@ -6,9 +6,12 @@ type GalleryTab = 'exterior' | 'living' | 'bedrooms' | 'bathrooms';
 const galleries: Record<GalleryTab, string[]> = {
   exterior: ['pool3', 'pool2', 'pool1', 'pool4'],
   living: ['living1', 'living2', 'kitchen', 'living3'],
-  bedrooms: ['bed1', 'bed2', 'bed3', 'bed4', 'twin'],
+  bedrooms: ['bed-suite', 'bed2', 'bed3', 'bed4', 'twin'],
   bathrooms: ['bath1', 'bath2', 'bath3', 'bath4']
 };
+
+// Fotos verticais recortadas em espaços horizontais: onde fica o foco do recorte.
+const focus: Record<string, string> = { 'bed-suite': 'center 60%' };
 
 export function PhotoGallery() {
   const { t } = useI18n();
@@ -28,7 +31,7 @@ export function PhotoGallery() {
       <div className="gallery-grid">
         {galleries[tab].map((photo, index) => (
           <button key={photo} className={`gallery-photo ${index === 0 ? 'gallery-photo--wide' : ''}`} onClick={() => setActivePhoto(photo)} aria-label={t.gallery.openPhoto(labels[tab])}>
-            <img src={`/images/${photo}.jpg`} alt="Villa Valverde" loading="lazy" />
+            <img src={`/images/${photo}.jpg`} alt="Villa Valverde" loading="lazy" style={focus[photo] ? { objectPosition: focus[photo] } : undefined} />
           </button>
         ))}
       </div>
