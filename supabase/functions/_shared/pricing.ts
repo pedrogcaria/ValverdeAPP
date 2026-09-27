@@ -14,11 +14,9 @@ export type BookingQuote = {
   checkOut: string;
   nights: number;
   baseAmount: number;
-  directDiscountAmount: number;
   heatedPoolAmount: number;
   promoAmount: number;
   totalAmount: number;
-  directDiscountPercent: number;
   promoDiscountPercent: number;
   currency: string;
 };
@@ -26,7 +24,6 @@ export type BookingQuote = {
 type Rate = {
   starts_on: string;
   ends_on: string;
-  booking_reference_nightly_price: number | string | null;
   direct_nightly_price: number | string;
 };
 
@@ -60,7 +57,7 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
 
   const { data: settings, error: settingsError } = await client
     .from('property_settings')
-    .select('owner_id, minimum_nights, heated_pool_weekly_price, direct_discount_percent, currency')
+    .select('owner_id, minimum_nights, heated_pool_weekly_price, currency')
     .limit(1)
     .maybeSingle();
 
@@ -70,7 +67,7 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
   const finalNight = new Date(checkOut.getTime() - millisecondsPerDay);
   const { data: rates, error: ratesError } = await client
     .from('seasonal_rates')
-    .select('starts_on, ends_on, booking_reference_nightly_price, direct_nightly_price')
+    .select('starts_on, ends_on, direct_nightly_price')
     .eq('owner_id', settings.owner_id)
     .eq('active', true)
     .lte('starts_on', isoDate(finalNight))
@@ -79,23 +76,14 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
 
   if (ratesError) throw new Error('Não foi possível consultar os preços atuais.');
 
-  let bookingReferenceAmount = 0;
+  // O preço cobrado é sempre o preço direto por noite. A tarifa Booking fica só
+  // como referência interna na gestão; os descontos dão-se com códigos.
   let baseAmount = 0;
   for (let day = new Date(checkIn); day < checkOut; day.setUTCDate(day.getUTCDate() + 1)) {
     const dayIso = isoDate(day);
     const rate = (rates as Rate[] | null)?.find((candidate) => candidate.starts_on <= dayIso && candidate.ends_on >= dayIso);
     if (!rate) throw new Error(`Ainda não existe um preço definido para ${dayIso}.`);
-    const storedDirectPrice = Number(rate.direct_nightly_price);
-    const bookingReferencePrice = rate.booking_reference_nightly_price === null
-      ? storedDirectPrice
-      : Number(rate.booking_reference_nightly_price);
-    // O legado calculava a vantagem direta e o cupão ambos a partir da tarifa
-    // Booking. Mantemos essa regra; a tarifa direta é só fallback sem referência.
-    const directPrice = rate.booking_reference_nightly_price === null
-      ? storedDirectPrice
-      : bookingReferencePrice * (1 - Number(settings.direct_discount_percent) / 100);
-    bookingReferenceAmount += bookingReferencePrice;
-    baseAmount += directPrice;
+    baseAmount += Number(rate.direct_nightly_price);
   }
 
   let promoDiscountPercent = 0;
@@ -119,7 +107,7 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
     ? Math.ceil(nights / 7) * Number(settings.heated_pool_weekly_price)
     : 0;
   const roundedBaseAmount = roundCurrency(baseAmount);
-  const promoAmount = Math.min(roundedBaseAmount, roundCurrency(bookingReferenceAmount * (promoDiscountPercent / 100)));
+  const promoAmount = Math.min(roundedBaseAmount, roundCurrency(roundedBaseAmount * (promoDiscountPercent / 100)));
 
   return {
     ownerId: settings.owner_id,
@@ -127,11 +115,9 @@ export async function calculateBookingQuote(client: SupabaseClient, input: Booki
     checkOut: input.checkOut,
     nights,
     baseAmount: roundedBaseAmount,
-    directDiscountAmount: roundCurrency(bookingReferenceAmount - baseAmount),
     heatedPoolAmount: roundCurrency(heatedPoolAmount),
     promoAmount,
     totalAmount: roundCurrency(roundedBaseAmount - promoAmount + heatedPoolAmount),
-    directDiscountPercent: Number(settings.direct_discount_percent),
     promoDiscountPercent,
     currency: settings.currency
   };

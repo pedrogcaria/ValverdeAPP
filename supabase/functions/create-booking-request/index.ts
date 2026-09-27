@@ -123,7 +123,7 @@ Deno.serve(async (request) => {
         estimated_pool_amount: quote.heatedPoolAmount,
         estimated_promo_amount: quote.promoAmount,
         estimated_total_amount: quote.totalAmount,
-        direct_discount_percent: quote.directDiscountPercent,
+        direct_discount_percent: 0,
         promo_discount_percent: quote.promoDiscountPercent,
         guest_message: input.message?.trim() || null
       })

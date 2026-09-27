@@ -21,7 +21,7 @@ Deno.serve(async (request) => {
     const client = createAdminClient();
     const { data: settings, error: settingsError } = await client
       .from('property_settings')
-      .select('owner_id, minimum_nights, heated_pool_weekly_price, direct_discount_percent, currency')
+      .select('owner_id, minimum_nights, heated_pool_weekly_price, currency')
       .limit(1)
       .maybeSingle();
     if (settingsError || !settings) throw new Error('A configuração da villa ainda não está disponível.');
@@ -30,7 +30,7 @@ Deno.serve(async (request) => {
     const end = new Date(Date.UTC(now.getUTCFullYear() + 1, now.getUTCMonth() + 1, 0));
     const { data: rates, error: ratesError } = await client
       .from('seasonal_rates')
-      .select('starts_on, ends_on, booking_reference_nightly_price, direct_nightly_price')
+      .select('starts_on, ends_on, direct_nightly_price')
       .eq('owner_id', settings.owner_id)
       .eq('active', true)
       .lte('starts_on', end.toISOString().slice(0, 10))
@@ -42,16 +42,12 @@ Deno.serve(async (request) => {
       settings: {
         minimumNights: settings.minimum_nights,
         heatedPoolWeeklyPrice: Number(settings.heated_pool_weekly_price),
-        directDiscountPercent: Number(settings.direct_discount_percent),
         currency: settings.currency
       },
       rates: (rates ?? []).map((rate) => ({
         startsOn: rate.starts_on,
         endsOn: rate.ends_on,
-        bookingReferenceNightlyPrice: rate.booking_reference_nightly_price === null ? null : Number(rate.booking_reference_nightly_price),
-        directNightlyPrice: rate.booking_reference_nightly_price === null
-          ? Number(rate.direct_nightly_price)
-          : Number(rate.booking_reference_nightly_price) * (1 - Number(settings.direct_discount_percent) / 100)
+        directNightlyPrice: Number(rate.direct_nightly_price)
       }))
     });
   } catch (error) {
