@@ -4,14 +4,14 @@ import { useI18n } from '../i18n/context';
 type GalleryTab = 'exterior' | 'living' | 'bedrooms' | 'bathrooms';
 
 const galleries: Record<GalleryTab, string[]> = {
-  exterior: ['pool3', 'pool2', 'pool1', 'pool4'],
+  exterior: ['pool3', 'pool2', 'pool1', 'pool4', 'ext-entrance', 'ext-garden', 'ext-path'],
   living: ['living1', 'living2', 'kitchen', 'living3'],
   bedrooms: ['bed-suite', 'bed2', 'bed3', 'bed4'],
   bathrooms: ['bath1', 'bath-wc', 'bath3', 'bath4']
 };
 
 // Fotos verticais recortadas em espaços horizontais: onde fica o foco do recorte.
-const focus: Record<string, string> = { 'bed-suite': 'center 60%', 'bath-wc': 'center 45%' };
+const focus: Record<string, string> = { 'bed-suite': 'center 60%', 'bath-wc': 'center 45%', 'ext-entrance': 'center 55%', 'ext-garden': 'center 55%', 'ext-path': 'center 50%' };
 
 export function PhotoGallery() {
   const { t } = useI18n();
