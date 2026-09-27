@@ -7,11 +7,11 @@ const galleries: Record<GalleryTab, string[]> = {
   exterior: ['pool3', 'pool2', 'pool1', 'pool4'],
   living: ['living1', 'living2', 'kitchen', 'living3'],
   bedrooms: ['bed-suite', 'bed2', 'bed3', 'bed4'],
-  bathrooms: ['bath1', 'bath2', 'bath3', 'bath4']
+  bathrooms: ['bath1', 'bath-wc', 'bath3', 'bath4']
 };
 
 // Fotos verticais recortadas em espaços horizontais: onde fica o foco do recorte.
-const focus: Record<string, string> = { 'bed-suite': 'center 60%' };
+const focus: Record<string, string> = { 'bed-suite': 'center 60%', 'bath-wc': 'center 45%' };
 
 export function PhotoGallery() {
   const { t } = useI18n();
