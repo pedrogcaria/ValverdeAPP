@@ -1,7 +1,6 @@
 export type PublicRate = {
   startsOn: string;
   endsOn: string;
-  bookingReferenceNightlyPrice: number | null;
   directNightlyPrice: number;
 };
 
@@ -9,7 +8,6 @@ export type PublicBookingConfig = {
   settings: {
     minimumNights: number;
     heatedPoolWeeklyPrice: number;
-    directDiscountPercent: number;
     currency: string;
   };
   rates: PublicRate[];
@@ -18,11 +16,9 @@ export type PublicBookingConfig = {
 export type BookingQuote = {
   nights: number;
   baseAmount: number;
-  directDiscountAmount: number;
   heatedPoolAmount: number;
   promoAmount: number;
   totalAmount: number;
-  directDiscountPercent: number;
   promoDiscountPercent: number;
   currency: string;
 };

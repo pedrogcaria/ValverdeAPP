@@ -117,7 +117,6 @@ export function BookingForm({ config }: Props) {
           {(quote || quoteError) && <div className="quote-summary" aria-live="polite">
             {quote ? <>
               <div><span>{t.form.nights(quote.nights)}</span><strong>{money(quote.baseAmount, quote.currency)}</strong></div>
-              {quote.directDiscountAmount > 0 && <div className="quote-summary__saving"><span>{t.form.directSaving}</span><strong>−{money(quote.directDiscountAmount, quote.currency)}</strong></div>}
               {quote.heatedPoolAmount > 0 && <div><span>{t.form.heatedPool}</span><strong>{money(quote.heatedPoolAmount, quote.currency)}</strong></div>}
               {quote.promoAmount > 0 && <div className="quote-summary__saving"><span>{t.form.promoDiscount(quote.promoDiscountPercent)}</span><strong>−{money(quote.promoAmount, quote.currency)}</strong></div>}
               <div className="quote-summary__total"><span>{t.form.estimatedTotal}</span><strong>{money(quote.totalAmount, quote.currency)}</strong></div>

@@ -34,7 +34,8 @@ const baseFixtures = {
 
 Deno.test('preço é calculado no servidor incluindo promoção e piscina aquecida', async () => {
   const quote = await calculateBookingQuote(fakeClient(baseFixtures), { checkIn: '2026-08-01', checkOut: '2026-08-08', guestsCount: 4, heatedPool: true, promoCode: 'verao10' });
-  if (quote.baseAmount !== 5040 || quote.directDiscountAmount !== 560 || quote.promoAmount !== 560 || quote.heatedPoolAmount !== 150 || quote.totalAmount !== 4630) {
+  // 7 noites a 720 € (preço direto) = 5040 €; o código de 10% desconta 504 € sobre esse valor.
+  if (quote.baseAmount !== 5040 || quote.promoAmount !== 504 || quote.heatedPoolAmount !== 150 || quote.totalAmount !== 4686) {
     throw new Error(`Total inesperado: ${JSON.stringify(quote)}`);
   }
 });
@@ -55,7 +56,7 @@ Deno.test('cupão inválido não produz proposta', async () => {
 
 Deno.test('conflitos apenas bloqueiam estadias sobrepostas', async () => {
   const client = fakeClient(baseFixtures);
-  const conflict = await hasReservationConflict(client, { ownerId: managerId, checkIn: '2026-08-22', checkOut: '2026-08-29', nights: 7, baseAmount: 0, directDiscountAmount: 0, heatedPoolAmount: 0, promoAmount: 0, totalAmount: 0, directDiscountPercent: 10, promoDiscountPercent: 0, currency: 'EUR' });
-  const adjacent = await hasReservationConflict(fakeClient(baseFixtures), { ownerId: managerId, checkIn: '2026-08-27', checkOut: '2026-09-03', nights: 7, baseAmount: 0, directDiscountAmount: 0, heatedPoolAmount: 0, promoAmount: 0, totalAmount: 0, directDiscountPercent: 10, promoDiscountPercent: 0, currency: 'EUR' });
+  const conflict = await hasReservationConflict(client, { ownerId: managerId, checkIn: '2026-08-22', checkOut: '2026-08-29', nights: 7, baseAmount: 0, heatedPoolAmount: 0, promoAmount: 0, totalAmount: 0, promoDiscountPercent: 0, currency: 'EUR' });
+  const adjacent = await hasReservationConflict(fakeClient(baseFixtures), { ownerId: managerId, checkIn: '2026-08-27', checkOut: '2026-09-03', nights: 7, baseAmount: 0, heatedPoolAmount: 0, promoAmount: 0, totalAmount: 0, promoDiscountPercent: 0, currency: 'EUR' });
   if (!conflict || adjacent) throw new Error(`Conflito inesperado: overlap=${conflict}, adjacent=${adjacent}`);
 });
