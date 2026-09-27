@@ -1,9 +1,9 @@
-export function currency(value: number, code = 'EUR'): string {
-  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: code, maximumFractionDigits: 0 }).format(value);
+export function currency(value: number, code = 'EUR', locale = 'en-GB'): string {
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: code, maximumFractionDigits: 0 }).format(value);
 }
 
-export function monthYear(iso: string): string {
-  return new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
+export function monthYear(iso: string, locale = 'en-GB'): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
 }
 
 export function todayIso(): string {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useI18n } from '../i18n/context';
 
 type GalleryTab = 'exterior' | 'living' | 'bedrooms' | 'bathrooms';
 
@@ -9,21 +10,16 @@ const galleries: Record<GalleryTab, string[]> = {
   bathrooms: ['bath1', 'bath2', 'bath3', 'bath4']
 };
 
-const labels: Record<GalleryTab, string> = {
-  exterior: 'Exterior & piscina',
-  living: 'Sala & cozinha',
-  bedrooms: 'Quartos',
-  bathrooms: 'Casas de banho'
-};
-
 export function PhotoGallery() {
+  const { t } = useI18n();
+  const labels = t.gallery.tabs;
   const [tab, setTab] = useState<GalleryTab>('exterior');
   const [activePhoto, setActivePhoto] = useState<string>();
 
   return (
     <>
-      <div className="gallery-tabs" role="tablist" aria-label="Galeria da villa">
-        {(Object.keys(labels) as GalleryTab[]).map((key) => (
+      <div className="gallery-tabs" role="tablist" aria-label={t.gallery.tabsLabel}>
+        {(Object.keys(galleries) as GalleryTab[]).map((key) => (
           <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'is-active' : ''} onClick={() => setTab(key)}>
             {labels[key]}
           </button>
@@ -31,14 +27,14 @@ export function PhotoGallery() {
       </div>
       <div className="gallery-grid">
         {galleries[tab].map((photo, index) => (
-          <button key={photo} className={`gallery-photo ${index === 0 ? 'gallery-photo--wide' : ''}`} onClick={() => setActivePhoto(photo)} aria-label={`Abrir fotografia: ${labels[tab]}`}>
+          <button key={photo} className={`gallery-photo ${index === 0 ? 'gallery-photo--wide' : ''}`} onClick={() => setActivePhoto(photo)} aria-label={t.gallery.openPhoto(labels[tab])}>
             <img src={`/images/${photo}.jpg`} alt="Villa Valverde" loading="lazy" />
           </button>
         ))}
       </div>
       {activePhoto && (
-        <div className="lightbox" role="dialog" aria-modal="true" aria-label="Fotografia ampliada" onClick={() => setActivePhoto(undefined)}>
-          <button className="lightbox__close" onClick={() => setActivePhoto(undefined)} aria-label="Fechar fotografia">×</button>
+        <div className="lightbox" role="dialog" aria-modal="true" aria-label={t.gallery.enlarged} onClick={() => setActivePhoto(undefined)}>
+          <button className="lightbox__close" onClick={() => setActivePhoto(undefined)} aria-label={t.gallery.closePhoto}>×</button>
           <img src={`/images/${activePhoto}.jpg`} alt="Villa Valverde" onClick={(event) => event.stopPropagation()} />
         </div>
       )}

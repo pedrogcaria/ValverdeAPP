@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { adminRedirectUrl, currentSurface, isPublicAdminPath, type Surface } from './lib/surface';
+import { localeFromPath } from './surfaces/public/i18n/locale';
 
 const AdminApp = lazy(() => import('./surfaces/admin/App'));
 const PublicApp = lazy(() => import('./surfaces/public/App'));
@@ -12,6 +13,11 @@ export default function App() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  // O index.html declara inglês por ser a língua do site; a gestão é só em português.
+  useEffect(() => {
+    if (surface === 'admin') document.documentElement.lang = 'pt-PT';
+  }, [surface]);
 
   useEffect(() => {
     if (surface === 'public' && isPublicAdminPath(window.location.pathname)) {
@@ -27,5 +33,6 @@ export default function App() {
     return <main className="surface-unknown"><p>A abrir a área de gestão…</p></main>;
   }
 
-  return <div className={`surface surface--${surface}`}><Suspense fallback={<main className="surface-unknown"><p>A carregar…</p></main>}>{surface === 'admin' ? <AdminApp /> : <PublicApp />}</Suspense></div>;
+  const loadingLabel = surface === 'public' && localeFromPath(window.location.pathname) === 'en' ? 'Loading…' : 'A carregar…';
+  return <div className={`surface surface--${surface}`}><Suspense fallback={<main className="surface-unknown"><p>{loadingLabel}</p></main>}>{surface === 'admin' ? <AdminApp /> : <PublicApp />}</Suspense></div>;
 }
