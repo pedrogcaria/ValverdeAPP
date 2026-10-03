@@ -33,7 +33,7 @@ uma service role key num ficheiro Vite.
 
 ## Códigos de acesso SwitchBot
 
-Migração `20261003120000_switchbot_access_codes.sql` e Edge Functions
+Migração `20261003172844_switchbot_access_codes.sql` e Edge Functions
 `switchbot-sync` e `switchbot-webhook`. Requer Keypad / Keypad Touch / Keypad
 Vision emparelhado com a fechadura e um Hub com Cloud Service ativo.
 
@@ -47,7 +47,7 @@ na lista real do keypad, e só então passa a `active`. Na gestão, cada reserva
 mostra o estado da chave e um botão de WhatsApp com a mensagem pronta a enviar.
 Um job `pg_cron` repete a sincronização de 10 em 10 minutos.
 
-Reversão: `supabase/rollbacks/20261003120000_switchbot_access_codes_down.sql`.
+Reversão: `supabase/rollbacks/20261003172844_switchbot_access_codes_down.sql`.
 
 Segredos adicionais:
 

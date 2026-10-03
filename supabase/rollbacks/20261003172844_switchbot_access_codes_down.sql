@@ -1,4 +1,4 @@
--- Reversão de 20261003120000_switchbot_access_codes.sql.
+-- Reversão de 20261003172844_switchbot_access_codes.sql.
 -- Perde o histórico de códigos de acesso; os códigos que já existam no keypad
 -- continuam lá e têm de ser apagados na app SwitchBot.
 select cron.unschedule('switchbot-access-codes')

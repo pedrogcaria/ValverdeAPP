@@ -31,20 +31,6 @@ type Reservation = {
 
 type Keypad = { id: string; label: string; switchbot_device_id: string };
 
-type AccessCode = {
-  id: string;
-  reservation_id: string;
-  keypad_id: string;
-  key_name: string;
-  passcode: string;
-  valid_from: string;
-  valid_until: string;
-  status: string;
-  switchbot_key_id: string | null;
-  created_at: string;
-  guest_notified_at: string | null;
-};
-
 export type SyncSummary = { issued: number; activated: number; failed: number; revoked: number; deleted: number; notified: number };
 
 function isoDate(date: Date): string {
