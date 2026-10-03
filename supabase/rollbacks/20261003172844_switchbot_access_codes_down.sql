@@ -18,3 +18,7 @@ drop function if exists public.access_codes_cron_secret_matches(text);
 -- Reversão de 20261003180054_access_codes_live_index.sql: repor o índice original.
 -- drop index if exists public.access_codes_live_per_reservation_keypad;
 -- create unique index access_codes_live_per_reservation_keypad on public.access_codes (reservation_id, keypad_id) where status in ('pending', 'active', 'deleting');
+-- Reversão de 20261003183446_switchbot_webhook_token.sql (aplicar primeiro). Antes,
+-- apagar o webhook na SwitchBot (POST /v1.1/webhook/deleteWebhook).
+drop function if exists public.switchbot_webhook_token();
+delete from vault.secrets where name = 'switchbot_webhook_token';
