@@ -35,6 +35,18 @@ export type Reservation = {
   deposit_notes: string | null;
   created_at: string;
   guests?: Guest | null;
+  access_codes?: AccessCode[];
+};
+
+export type AccessCode = {
+  id: string;
+  keypad_id: string;
+  passcode: string;
+  status: 'pending' | 'active' | 'failed' | 'deleting' | 'deleted';
+  valid_from: string;
+  valid_until: string;
+  last_error: string | null;
+  created_at: string;
 };
 
 export type Expense = {

@@ -37,13 +37,17 @@ Migração `20261003120000_switchbot_access_codes.sql` e Edge Functions
 `switchbot-sync` e `switchbot-webhook`. Requer Keypad / Keypad Touch / Keypad
 Vision emparelhado com a fechadura e um Hub com Cloud Service ativo.
 
-Fluxo: reservas `confirmed`/`checked_in` com check-in dentro de
-`property_settings.access_code_lead_days` recebem um código `timeLimit` de 8
-dígitos, válido entre `access_code_valid_from` do dia de check-in e
-`access_code_valid_until` do dia de check-out (hora local da villa). Cancelamentos,
-fim da estadia e alterações de datas apagam o código no keypad (alteração de datas
-gera um código novo). O keypad confirma de forma assíncrona: o código fica
-`pending` até aparecer na lista real do keypad, e só então passa a `active`.
+Fluxo: quando uma reserva passa a `confirmed` (ou `checked_in`), um trigger chama
+`switchbot-sync`, que cria no keypad um código `timeLimit` de 8 dígitos válido das
+`access_code_valid_from` (00:00) do dia de entrada às `access_code_valid_until`
+(23:59) do dia de saída, hora local da villa. Cancelamentos, fim da estadia e
+alterações de datas apagam o código no keypad (alteração de datas gera um código
+novo). O keypad confirma de forma assíncrona: o código fica `pending` até aparecer
+na lista real do keypad, e só então passa a `active`. Na gestão, cada reserva
+mostra o estado da chave e um botão de WhatsApp com a mensagem pronta a enviar.
+Um job `pg_cron` repete a sincronização de 10 em 10 minutos.
+
+Reversão: `supabase/rollbacks/20261003120000_switchbot_access_codes_down.sql`.
 
 Segredos adicionais:
 
@@ -63,20 +67,12 @@ Configuração inicial (QA primeiro):
 3. Registar o webhook na SwitchBot (só existe um por conta):
    `POST /v1.1/webhook/setupWebhook` com
    `{"action":"setupWebhook","url":"https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-webhook?token=<SWITCHBOT_WEBHOOK_TOKEN>","deviceList":"ALL"}`.
-4. Agendar a sincronização a cada 10 minutos (pg_cron + pg_net, segredo no Vault):
+4. Guardar no Vault o URL e o segredo usados pelo trigger e pelo `pg_cron`
+   (o job já é criado pela migração e não faz nada enquanto faltarem):
 
    ```sql
+   select vault.create_secret('https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-sync', 'access_codes_sync_url');
    select vault.create_secret('<ACCESS_CODES_CRON_SECRET>', 'access_codes_cron_secret');
-   select cron.schedule('switchbot-access-codes', '*/10 * * * *', $$
-     select net.http_post(
-       url := 'https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-sync',
-       headers := jsonb_build_object(
-         'Content-Type', 'application/json',
-         'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'access_codes_cron_secret')
-       ),
-       body := '{}'::jsonb
-     );
-   $$);
    ```
 
 O webhook só acelera a confirmação; se falhar, a execução seguinte do cron

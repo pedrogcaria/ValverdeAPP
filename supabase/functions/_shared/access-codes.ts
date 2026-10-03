@@ -20,7 +20,6 @@ type Settings = {
   timezone: string;
   access_code_valid_from: string;
   access_code_valid_until: string;
-  access_code_lead_days: number;
 };
 
 type Reservation = {
@@ -73,7 +72,7 @@ export function keyName(reservation: Pick<Reservation, 'id' | 'check_in'>): stri
 async function loadSettings(client: SupabaseClient): Promise<Settings> {
   const { data, error } = await client
     .from('property_settings')
-    .select('owner_id, property_name, timezone, access_code_valid_from, access_code_valid_until, access_code_lead_days')
+    .select('owner_id, property_name, timezone, access_code_valid_from, access_code_valid_until')
     .limit(1)
     .maybeSingle();
   if (error || !data) throw new Error('A configuração da villa não está disponível.');
@@ -95,16 +94,15 @@ async function updateCode(client: SupabaseClient, id: string, values: Record<str
   if (error) throw new Error('Não foi possível atualizar o código de acesso.');
 }
 
-// Cria códigos para reservas confirmadas cujo check-in está dentro da antecedência configurada.
+// Cria códigos para todas as reservas confirmadas que ainda não terminaram.
 async function issueCodes(client: SupabaseClient, credentials: SwitchBotCredentials, settings: Settings, keypads: Keypad[], summary: SyncSummary) {
   const now = new Date();
-  const horizon = new Date(now.getTime() + settings.access_code_lead_days * 86_400_000);
   const { data: reservations, error } = await client
     .from('reservations')
     .select('id, status, check_in, check_out')
     .eq('owner_id', settings.owner_id)
     .in('status', LIVE_RESERVATION_STATUSES)
-    .lte('check_in', isoDate(horizon))
+    .not('check_in', 'is', null)
     .gte('check_out', isoDate(now));
   if (error) throw new Error('Não foi possível ler as reservas.');
 

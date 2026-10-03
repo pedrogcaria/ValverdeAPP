@@ -2,12 +2,11 @@
 -- As escritas são feitas só pelas Edge Functions (service_role); o gestor apenas
 -- consulta e configura os keypads.
 
--- Horas locais (timezone da villa) em que o código começa e deixa de funcionar.
+-- Horas locais (timezone da villa) em que o código começa e deixa de funcionar:
+-- por omissão o dia inteiro de entrada até ao fim do dia de saída.
 alter table public.property_settings
-  add column access_code_valid_from time not null default '15:00',
-  add column access_code_valid_until time not null default '11:00',
-  add column access_code_lead_days integer not null default 2
-    check (access_code_lead_days between 0 and 30);
+  add column access_code_valid_from time not null default '00:00',
+  add column access_code_valid_until time not null default '23:59';
 
 create table public.access_keypads (
   id uuid primary key default gen_random_uuid(),
@@ -75,3 +74,67 @@ create policy "Manager views access codes"
   on public.access_codes for select to authenticated
   using ((select public.is_villa_manager()) and owner_id = (select auth.uid()));
 revoke insert, update, delete on table public.access_codes from authenticated;
+
+-- Pedir a sincronização à Edge Function quando uma reserva fica confirmada,
+-- é cancelada ou muda de datas, e de 10 em 10 minutos como rede de segurança.
+-- O URL e o segredo vivem no Vault; sem eles a função não faz nada, por isso a
+-- migração pode ser aplicada antes de a SwitchBot estar configurada.
+create extension if not exists pg_net with schema extensions;
+create extension if not exists pg_cron with schema pg_catalog;
+
+create or replace function public.request_access_codes_sync()
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  sync_url text;
+  cron_secret text;
+begin
+  select decrypted_secret into sync_url from vault.decrypted_secrets where name = 'access_codes_sync_url';
+  select decrypted_secret into cron_secret from vault.decrypted_secrets where name = 'access_codes_cron_secret';
+  if sync_url is null or cron_secret is null then
+    return;
+  end if;
+  perform net.http_post(
+    url := sync_url,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', cron_secret),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 30000
+  );
+end;
+$$;
+
+revoke all on function public.request_access_codes_sync() from public, anon, authenticated;
+
+create or replace function public.reservation_access_codes_trigger()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  if tg_op = 'INSERT' and new.status in ('confirmed', 'checked_in')
+    or tg_op = 'UPDATE' and (
+      new.status is distinct from old.status
+      or new.check_in is distinct from old.check_in
+      or new.check_out is distinct from old.check_out
+    ) and (new.status in ('confirmed', 'checked_in') or old.status in ('confirmed', 'checked_in')) then
+    perform public.request_access_codes_sync();
+  end if;
+  return null;
+end;
+$$;
+
+revoke all on function public.reservation_access_codes_trigger() from public, anon, authenticated;
+
+create trigger reservations_request_access_codes
+  after insert or update of status, check_in, check_out on public.reservations
+  for each row execute function public.reservation_access_codes_trigger();
+
+select cron.schedule(
+  'switchbot-access-codes',
+  '*/10 * * * *',
+  'select public.request_access_codes_sync()'
+);
