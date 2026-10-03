@@ -1,4 +1,4 @@
-import { generatePasscode, isWeakPasscode, signHeaders, zonedTime } from './switchbot.ts';
+import { deleteKey, generatePasscode, isWeakPasscode, signHeaders, zonedTime } from './switchbot.ts';
 import { secretMatches } from './secret.ts';
 
 function assertEquals(actual: unknown, expected: unknown, message: string) {
@@ -34,4 +34,19 @@ Deno.test('Os segredos partilhados só aceitam o valor exato', async () => {
   assertEquals(await secretMatches('abd', 'abc'), false, 'Diferente');
   assertEquals(await secretMatches(null, 'abc'), false, 'Ausente');
   assertEquals(await secretMatches('abc', undefined), false, 'Sem configuração');
+});
+
+Deno.test('O deleteKey envia o id do código como número', async () => {
+  const originalFetch = globalThis.fetch;
+  let sentBody: { parameter?: { id?: unknown } } = {};
+  globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+    sentBody = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({ statusCode: 100, body: { commandId: 'CMD-1' }, message: 'success' }));
+  }) as typeof fetch;
+  try {
+    await deleteKey({ token: 't', secret: 's' }, 'E907C9098B25', '12');
+    assertEquals(sentBody.parameter?.id, 12, 'Id numérico');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
