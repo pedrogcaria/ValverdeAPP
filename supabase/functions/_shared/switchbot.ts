@@ -108,7 +108,36 @@ export async function listKeypadKeys(credentials: SwitchBotCredentials): Promise
   return keys;
 }
 
-export type KeypadDevice = { deviceId: string; deviceName: string; deviceType: string; hubDeviceId: string | null; enableCloudService: boolean };
+export type WebhookResult =
+  | { status: 'unchanged' | 'created' | 'updated' }
+  | { status: 'foreign'; urls: string[] };
+
+// Garante que os eventos da conta chegam ao nosso webhook. A SwitchBot só guarda
+// um URL por conta: um URL nosso com outro token é atualizado, mas um URL de
+// outro serviço nunca é substituído sem decisão humana.
+export async function ensureWebhook(credentials: SwitchBotCredentials, url: string): Promise<WebhookResult> {
+  let urls: string[] = [];
+  try {
+    const body = await call<{ urls?: string[] }>(credentials, 'POST', '/webhook/queryWebhook', { action: 'queryUrl' });
+    urls = body?.urls ?? [];
+  } catch {
+    // Sem webhook configurado a consulta pode devolver erro; tratamos como vazio.
+  }
+  if (urls.includes(url)) return { status: 'unchanged' };
+
+  const ourBase = url.split('?')[0];
+  const ours = urls.find((existing) => existing.split('?')[0] === ourBase);
+  if (ours) {
+    await call(credentials, 'POST', '/webhook/updateWebhook', { action: 'updateWebhook', config: { url, enable: true } });
+    return { status: 'updated' };
+  }
+  if (urls.length) return { status: 'foreign', urls: urls.map((existing) => existing.split('?')[0]) };
+
+  await call(credentials, 'POST', '/webhook/setupWebhook', { action: 'setupWebhook', url, deviceList: 'ALL' });
+  return { status: 'created' };
+}
+
+export type KeypadDevice ={ deviceId: string; deviceName: string; deviceType: string; hubDeviceId: string | null; enableCloudService: boolean };
 
 // Keypads e fechaduras da conta, para a configuração inicial. Não inclui códigos.
 export async function listKeypads(credentials: SwitchBotCredentials): Promise<KeypadDevice[]> {

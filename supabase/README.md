@@ -53,7 +53,6 @@ Segredos adicionais:
 
 - `SWITCHBOT_TOKEN` e `SWITCHBOT_SECRET` (app SwitchBot → Perfil → Preferências →
   tocar 10× na versão → Developer Options)
-- `SWITCHBOT_WEBHOOK_TOKEN` (aleatório, ≥ 32 caracteres)
 - `ACCESS_CODE_EMAIL_GUESTS=true` para enviar o código ao hóspede por email (com
   BCC para `BOOKING_NOTIFICATION_TO`). Sem esta variável o código só aparece na gestão.
 
@@ -63,9 +62,20 @@ Configuração inicial (QA primeiro):
 2. Obter o `deviceId` do keypad (`GET https://api.switch-bot.com/v1.1/devices`) e
    registá-lo: `insert into public.access_keypads (owner_id, label, switchbot_device_id)
    values ('<UUID_DO_GESTOR>', 'Porta principal', '<DEVICE_ID>');`
-3. Registar o webhook na SwitchBot (só existe um por conta):
-   `POST /v1.1/webhook/setupWebhook` com
-   `{"action":"setupWebhook","url":"https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-webhook?token=<SWITCHBOT_WEBHOOK_TOKEN>","deviceList":"ALL"}`.
+3. Registar o webhook na SwitchBot (só existe um por conta). O token é gerado pela
+   migração `20261003183446_switchbot_webhook_token.sql` e fica só no Vault; a
+   função regista o URL com o token e nunca substitui um webhook de outro serviço:
+
+   ```sql
+   select net.http_post(
+     url := (select decrypted_secret from vault.decrypted_secrets where name = 'access_codes_sync_url'),
+     headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret',
+       (select decrypted_secret from vault.decrypted_secrets where name = 'access_codes_cron_secret')),
+     body := '{"ensureWebhook": true}'::jsonb
+   );
+   -- resultado (created / updated / unchanged / foreign) em net._http_response
+   ```
+
 4. Guardar no Vault o URL da função (o segredo `access_codes_cron_secret` é gerado
    pela migração `20261003175105_access_codes_vault_secret.sql` e validado pela
    própria função na base de dados, sem cópia manual):

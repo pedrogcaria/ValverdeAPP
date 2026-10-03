@@ -3,13 +3,17 @@ import { secretMatches } from '../_shared/secret.ts';
 import { createAdminClient } from '../_shared/supabase.ts';
 import { switchBotCredentials } from '../_shared/switchbot.ts';
 
-// A SwitchBot não assina os webhooks: o URL registado leva ?token=<segredo>.
-// Mesmo assim o payload só serve de gatilho; o estado é sempre confirmado na
-// lista real de códigos do keypad (reconcileCodes) antes de ativar um código.
+// A SwitchBot não assina os webhooks: o URL registado leva ?token=<segredo>,
+// guardado só no Vault. Mesmo assim o payload só serve de gatilho; o estado é
+// sempre confirmado na lista real de códigos do keypad (reconcileCodes).
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response(null, { status: 405 });
   const token = new URL(request.url).searchParams.get('token');
-  if (!await secretMatches(token, Deno.env.get('SWITCHBOT_WEBHOOK_TOKEN'))) {
+  if (!token) return new Response(null, { status: 401 });
+
+  const client = createAdminClient();
+  const { data: expected } = await client.rpc('switchbot_webhook_token');
+  if (!await secretMatches(token, typeof expected === 'string' ? expected : undefined)) {
     return new Response(null, { status: 401 });
   }
 
@@ -23,12 +27,18 @@ Deno.serve(async (request) => {
   if (eventName !== 'createKey' && eventName !== 'deleteKey') return new Response(null, { status: 204 });
 
   try {
-    const client = createAdminClient();
-    if (eventName === 'createKey' && context?.commandId && context.result && context.result !== 'success') {
+    const failed = Boolean(context?.commandId && context.result && context.result !== 'success');
+    if (eventName === 'createKey' && failed) {
       await client.from('access_codes')
-        .update({ status: 'failed', last_error: `O keypad respondeu ${context.result}.` })
-        .eq('switchbot_command_id', context.commandId)
+        .update({ status: 'failed', last_error: `O keypad respondeu ${context?.result}.` })
+        .eq('switchbot_command_id', context?.commandId)
         .eq('status', 'pending');
+    } else if (eventName === 'deleteKey' && failed) {
+      // Volta a active para a próxima sincronização repetir a remoção.
+      await client.from('access_codes')
+        .update({ status: 'active', last_error: `O keypad não apagou o código (${context?.result}).` })
+        .eq('switchbot_command_id', context?.commandId)
+        .eq('status', 'deleting');
     } else {
       const summary: SyncSummary = { keypads: 0, issued: 0, activated: 0, failed: 0, revoked: 0, deleted: 0, notified: 0 };
       await reconcileCodes(client, switchBotCredentials(), summary);

@@ -1,4 +1,4 @@
-import { deleteKey, generatePasscode, isWeakPasscode, signHeaders, zonedTime } from './switchbot.ts';
+import { deleteKey, ensureWebhook, generatePasscode, isWeakPasscode, signHeaders, zonedTime } from './switchbot.ts';
 import { secretMatches } from './secret.ts';
 
 function assertEquals(actual: unknown, expected: unknown, message: string) {
@@ -49,4 +49,55 @@ Deno.test('O deleteKey envia o id do código como número', async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+async function withSwitchBotApi(urls: string[], run: (calls: { path: string; body: Record<string, unknown> }[]) => Promise<void>) {
+  const originalFetch = globalThis.fetch;
+  const calls: { path: string; body: Record<string, unknown> }[] = [];
+  globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+    const path = new URL(String(input)).pathname;
+    calls.push({ path, body: JSON.parse(String(init?.body ?? '{}')) });
+    const body = path.endsWith('/queryWebhook') ? { urls } : {};
+    return new Response(JSON.stringify({ statusCode: 100, body, message: 'success' }));
+  }) as typeof fetch;
+  try {
+    await run(calls);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+Deno.test('O webhook é registado quando não existe nenhum', async () => {
+  const url = 'https://x.supabase.co/functions/v1/switchbot-webhook?token=novo';
+  await withSwitchBotApi([], async (calls) => {
+    assertEquals((await ensureWebhook({ token: 't', secret: 's' }, url)).status, 'created', 'Estado');
+    assertEquals(calls.at(-1)?.path, '/v1.1/webhook/setupWebhook', 'Chamada');
+    assertEquals(calls.at(-1)?.body.url, url, 'URL');
+  });
+});
+
+Deno.test('O webhook não é tocado quando já está registado', async () => {
+  const url = 'https://x.supabase.co/functions/v1/switchbot-webhook?token=novo';
+  await withSwitchBotApi([url], async (calls) => {
+    assertEquals((await ensureWebhook({ token: 't', secret: 's' }, url)).status, 'unchanged', 'Estado');
+    assertEquals(calls.length, 1, 'Só a consulta');
+  });
+});
+
+Deno.test('Um webhook nosso com outro token é atualizado', async () => {
+  const url = 'https://x.supabase.co/functions/v1/switchbot-webhook?token=novo';
+  await withSwitchBotApi(['https://x.supabase.co/functions/v1/switchbot-webhook?token=antigo'], async (calls) => {
+    assertEquals((await ensureWebhook({ token: 't', secret: 's' }, url)).status, 'updated', 'Estado');
+    assertEquals(calls.at(-1)?.path, '/v1.1/webhook/updateWebhook', 'Chamada');
+  });
+});
+
+Deno.test('Um webhook de outro serviço nunca é substituído', async () => {
+  const url = 'https://x.supabase.co/functions/v1/switchbot-webhook?token=novo';
+  await withSwitchBotApi(['https://outro.example/hook?secret=abc'], async (calls) => {
+    const result = await ensureWebhook({ token: 't', secret: 's' }, url);
+    assertEquals(result.status, 'foreign', 'Estado');
+    assertEquals(calls.length, 1, 'Só a consulta');
+    if (result.status === 'foreign') assertEquals(result.urls[0], 'https://outro.example/hook', 'URL sem segredo');
+  });
 });
