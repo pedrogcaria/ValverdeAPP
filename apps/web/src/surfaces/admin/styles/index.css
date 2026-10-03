@@ -121,3 +121,4 @@
   .surface--admin { background: #fff; }.side-nav, .mobile-nav, .admin-topbar, .page-intro .row-actions, .button, .setup-notice { display: none !important; }.admin-shell { display: block; }.admin-main { padding: 0; }.page-content { max-width: none; padding: 0; }.panel, .metric-strip { break-inside: avoid; box-shadow: none; }.metric--emphasis { background: #fff; }.metric--emphasis span, .metric--emphasis strong { color: #173428; }
 }
 }
+.inline-note--error { color: #a3533d; }.inline-note svg { vertical-align: -2px; margin-right: .2rem; }.inline-note strong { color: #1d4330; letter-spacing: .08em; }

@@ -30,3 +30,53 @@ Configurar exclusivamente no Supabase, sem os guardar em ficheiros Git:
 `apps/web/.env.example` contém as variáveis `VITE_*`, públicas por definição:
 URL Supabase, chave publicável, URLs públicas e site key Turnstile. Nunca usar
 uma service role key num ficheiro Vite.
+
+## Códigos de acesso SwitchBot
+
+Migração `20261003172844_switchbot_access_codes.sql` e Edge Functions
+`switchbot-sync` e `switchbot-webhook`. Requer Keypad / Keypad Touch / Keypad
+Vision emparelhado com a fechadura e um Hub com Cloud Service ativo.
+
+Fluxo: quando uma reserva passa a `confirmed` (ou `checked_in`), um trigger chama
+`switchbot-sync`, que cria no keypad um código `timeLimit` de 6 dígitos com o nome do hóspede válido das
+`access_code_valid_from` (00:00) do dia de entrada às `access_code_valid_until`
+(23:59) do dia de saída, hora local da villa. Cancelamentos, fim da estadia e
+alterações de datas apagam o código no keypad (alteração de datas gera um código
+novo). O keypad confirma de forma assíncrona: o código fica `pending` até aparecer
+na lista real do keypad, e só então passa a `active`. Na gestão, cada reserva
+mostra o estado da chave e um botão de WhatsApp com a mensagem pronta a enviar.
+Um job `pg_cron` repete a sincronização de 10 em 10 minutos.
+
+Reversão: `supabase/rollbacks/20261003172844_switchbot_access_codes_down.sql`.
+
+Segredos adicionais:
+
+- `SWITCHBOT_TOKEN` e `SWITCHBOT_SECRET` (app SwitchBot → Perfil → Preferências →
+  tocar 10× na versão → Developer Options)
+- `SWITCHBOT_WEBHOOK_TOKEN` (aleatório, ≥ 32 caracteres)
+- `ACCESS_CODE_EMAIL_GUESTS=true` para enviar o código ao hóspede por email (com
+  BCC para `BOOKING_NOTIFICATION_TO`). Sem esta variável o código só aparece na gestão.
+
+Configuração inicial (QA primeiro):
+
+1. Aplicar as migrações e publicar `switchbot-sync` e `switchbot-webhook`.
+2. Obter o `deviceId` do keypad (`GET https://api.switch-bot.com/v1.1/devices`) e
+   registá-lo: `insert into public.access_keypads (owner_id, label, switchbot_device_id)
+   values ('<UUID_DO_GESTOR>', 'Porta principal', '<DEVICE_ID>');`
+3. Registar o webhook na SwitchBot (só existe um por conta):
+   `POST /v1.1/webhook/setupWebhook` com
+   `{"action":"setupWebhook","url":"https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-webhook?token=<SWITCHBOT_WEBHOOK_TOKEN>","deviceList":"ALL"}`.
+4. Guardar no Vault o URL da função (o segredo `access_codes_cron_secret` é gerado
+   pela migração `20261003175105_access_codes_vault_secret.sql` e validado pela
+   própria função na base de dados, sem cópia manual):
+
+   ```sql
+   select vault.create_secret('https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-sync', 'access_codes_sync_url');
+   ```
+
+   Enquanto não houver keypads registados, a resposta de `switchbot-sync` inclui
+   `availableKeypads` com os keypads da conta SwitchBot (consultar em
+   `net._http_response` depois de `select public.request_access_codes_sync();`).
+
+O webhook só acelera a confirmação; se falhar, a execução seguinte do cron
+reconcilia tudo com a lista de códigos do keypad.
