@@ -31,7 +31,7 @@ type Reservation = {
 
 type Keypad = { id: string; label: string; switchbot_device_id: string };
 
-export type SyncSummary = { issued: number; activated: number; failed: number; revoked: number; deleted: number; notified: number };
+export type SyncSummary = { keypads: number; issued: number; activated: number; failed: number; revoked: number; deleted: number; notified: number };
 
 function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -267,9 +267,9 @@ async function notifyGuests(client: SupabaseClient, settings: Settings, summary:
 }
 
 export async function syncAccessCodes(client: SupabaseClient, credentials: SwitchBotCredentials): Promise<SyncSummary> {
-  const summary: SyncSummary = { issued: 0, activated: 0, failed: 0, revoked: 0, deleted: 0, notified: 0 };
   const settings = await loadSettings(client);
   const keypads = await loadKeypads(client, settings.owner_id);
+  const summary: SyncSummary = { keypads: keypads.length, issued: 0, activated: 0, failed: 0, revoked: 0, deleted: 0, notified: 0 };
   const keypadsById = new Map(keypads.map((keypad) => [keypad.id, keypad]));
 
   // Ordem: remover o que já não serve antes de emitir, para que uma alteração de datas
