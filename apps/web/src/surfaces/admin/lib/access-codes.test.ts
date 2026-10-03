@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { accessCodeMessage, currentAccessCode, prefersPortuguese } from './access-codes';
 import type { AccessCode } from './types';
 
-function code(status: AccessCode['status'], created_at: string, passcode = '48213907'): AccessCode {
+function code(status: AccessCode['status'], created_at: string, passcode = '482139'): AccessCode {
   return { id: created_at, keypad_id: 'k', passcode, status, valid_from: '2026-07-10T23:00:00Z', valid_until: '2026-07-17T22:59:00Z', last_error: null, created_at };
 }
 
@@ -20,7 +20,7 @@ describe('códigos de acesso', () => {
 
   it('mostra o código e a validade em hora de Portugal', () => {
     const message = accessCodeMessage({ guests: null }, code('active', '2026-07-01'));
-    expect(message).toContain('*48213907*');
+    expect(message).toContain('*482139*');
     expect(message).toContain('11/07/2026, 00:00');
     expect(message).toContain('17/07/2026, 23:59');
   });

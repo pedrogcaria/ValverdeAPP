@@ -15,3 +15,6 @@ alter table public.property_settings
 delete from vault.secrets where name in ('access_codes_sync_url', 'access_codes_cron_secret');
 -- Reversão de 20261003175105_access_codes_vault_secret.sql (aplicar antes da anterior).
 drop function if exists public.access_codes_cron_secret_matches(text);
+-- Reversão de 20261003180054_access_codes_live_index.sql: repor o índice original.
+-- drop index if exists public.access_codes_live_per_reservation_keypad;
+-- create unique index access_codes_live_per_reservation_keypad on public.access_codes (reservation_id, keypad_id) where status in ('pending', 'active', 'deleting');

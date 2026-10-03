@@ -3,6 +3,7 @@ import {
   createTimeLimitedKey,
   deleteKey,
   generatePasscode,
+  type KeypadKey,
   listKeypadKeys,
   type SwitchBotCredentials,
   zonedTime
@@ -13,6 +14,8 @@ const LIVE_RESERVATION_STATUSES = ['confirmed', 'checked_in'];
 const PENDING_TIMEOUT_MS = 15 * 60_000;
 // Depois de uma falha (ex.: hub offline) espera antes de tentar outra vez.
 const RETRY_AFTER_FAILURE_MS = 60 * 60_000;
+// Durante quanto tempo uma falha ainda é procurada no keypad.
+const LATE_FAILURE_WINDOW_MS = 48 * 60 * 60_000;
 
 type Settings = {
   owner_id: string;
@@ -27,7 +30,11 @@ type Reservation = {
   status: string;
   check_in: string;
   check_out: string;
+  guests?: { full_name: string | null } | { full_name: string | null }[] | null;
 };
+
+const PASSCODE_LENGTH = 6;
+const LIVE_CODE_STATUSES = ['pending', 'active'];
 
 type Keypad = { id: string; label: string; switchbot_device_id: string };
 
@@ -48,11 +55,24 @@ export function codeWindow(reservation: Pick<Reservation, 'check_in' | 'check_ou
   };
 }
 
-// O sufixo aleatório evita colidir com um código antigo da mesma reserva que o
-// keypad ainda não acabou de apagar (a SwitchBot não aceita nomes repetidos).
-export function keyName(reservation: Pick<Reservation, 'id' | 'check_in'>): string {
-  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(2)), (byte) => byte.toString(16).padStart(2, '0')).join('');
-  return `VV ${reservation.check_in} ${reservation.id.slice(0, 8)}-${suffix}`;
+// Nome visível na app SwitchBot: hóspede + dia de entrada. O sufixo aleatório
+// evita colidir com um código antigo da mesma reserva que o keypad ainda não
+// apagou (a SwitchBot não aceita nomes repetidos no mesmo keypad).
+export function keyName(guestName: string | null | undefined, checkIn: string, suffix = randomSuffix()): string {
+  const name = (guestName ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 16)
+    .trim() || 'Hospede';
+  const [, month, day] = checkIn.split('-');
+  return `${name} ${day}-${month} ${suffix}`;
+}
+
+function randomSuffix(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(2)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 async function loadSettings(client: SupabaseClient): Promise<Settings> {
@@ -85,7 +105,7 @@ async function issueCodes(client: SupabaseClient, credentials: SwitchBotCredenti
   const now = new Date();
   const { data: reservations, error } = await client
     .from('reservations')
-    .select('id, status, check_in, check_out')
+    .select('id, status, check_in, check_out, guests(full_name)')
     .eq('owner_id', settings.owner_id)
     .in('status', LIVE_RESERVATION_STATUSES)
     .not('check_in', 'is', null)
@@ -105,10 +125,11 @@ async function issueCodes(client: SupabaseClient, credentials: SwitchBotCredenti
         .in('status', ['pending', 'active', 'deleting', 'failed']);
       const recentFailure = existing?.some((code) => code.keypad_id === keypad.id && code.status === 'failed'
         && now.getTime() - new Date(code.updated_at).getTime() < RETRY_AFTER_FAILURE_MS);
-      if (recentFailure || existing?.some((code) => code.keypad_id === keypad.id && code.status !== 'failed')) continue;
-      const passcode = existing?.find((code) => code.status === 'pending' || code.status === 'active')?.passcode ?? generatePasscode();
+      if (recentFailure || existing?.some((code) => code.keypad_id === keypad.id && LIVE_CODE_STATUSES.includes(code.status))) continue;
+      const passcode = existing?.find((code) => LIVE_CODE_STATUSES.includes(code.status))?.passcode ?? generatePasscode(PASSCODE_LENGTH);
 
-      const name = keyName(reservation);
+      const guest = Array.isArray(reservation.guests) ? reservation.guests[0] : reservation.guests;
+      const name = keyName(guest?.full_name, reservation.check_in);
       const { data: inserted, error: insertError } = await client
         .from('access_codes')
         .insert({
@@ -139,16 +160,19 @@ async function issueCodes(client: SupabaseClient, credentials: SwitchBotCredenti
   }
 }
 
-// Pede a remoção de códigos de reservas canceladas, terminadas ou com datas alteradas.
+// Apaga no keypad os códigos de reservas canceladas, concluídas, terminadas ou
+// com datas alteradas. Sem id SwitchBot guardado, procura o código pelo nome
+// para nunca deixar uma entrada esquecida no keypad.
 async function revokeCodes(client: SupabaseClient, credentials: SwitchBotCredentials, settings: Settings, keypadsById: Map<string, Keypad>, summary: SyncSummary) {
   const { data: codes, error } = await client
     .from('access_codes')
-    .select('id, reservation_id, keypad_id, valid_from, valid_until, switchbot_key_id, reservations(status, check_in, check_out)')
+    .select('id, reservation_id, keypad_id, key_name, valid_from, valid_until, switchbot_key_id, reservations(status, check_in, check_out)')
     .eq('owner_id', settings.owner_id)
     .eq('status', 'active');
   if (error) throw new Error('Não foi possível ler os códigos ativos.');
 
   const now = Date.now();
+  let keysByDevice: Map<string, KeypadKey[]> | null = null;
   for (const code of codes ?? []) {
     const reservation = (Array.isArray(code.reservations) ? code.reservations[0] : code.reservations) as Omit<Reservation, 'id'> | null;
     const expired = new Date(code.valid_until).getTime() < now;
@@ -162,14 +186,24 @@ async function revokeCodes(client: SupabaseClient, credentials: SwitchBotCredent
     if (!expired && !cancelled && !datesChanged) continue;
 
     const keypad = keypadsById.get(code.keypad_id);
-    if (!keypad || !code.switchbot_key_id) {
-      await updateCode(client, code.id, { status: 'deleted', last_error: 'Sem keypad ou id SwitchBot; removido só na app.' });
-      summary.deleted++;
+    if (!keypad) {
+      await updateCode(client, code.id, { last_error: 'Keypad desativado na app; apague o código na app SwitchBot.' });
       continue;
     }
     try {
-      const commandId = await deleteKey(credentials, keypad.switchbot_device_id, code.switchbot_key_id);
-      await updateCode(client, code.id, { status: 'deleting', switchbot_command_id: commandId, last_error: null });
+      let keyId = code.switchbot_key_id;
+      if (!keyId) {
+        keysByDevice ??= await listKeypadKeys(credentials);
+        const match = keysByDevice.get(keypad.switchbot_device_id)?.find((key) => key.name === code.key_name);
+        if (!match) {
+          await updateCode(client, code.id, { status: 'deleted', last_error: null });
+          summary.deleted++;
+          continue;
+        }
+        keyId = String(match.id);
+      }
+      const commandId = await deleteKey(credentials, keypad.switchbot_device_id, keyId);
+      await updateCode(client, code.id, { status: 'deleting', switchbot_key_id: keyId, switchbot_command_id: commandId, last_error: null });
       summary.revoked++;
     } catch (deleteError) {
       await updateCode(client, code.id, { last_error: errorMessage(deleteError) });
@@ -177,13 +211,15 @@ async function revokeCodes(client: SupabaseClient, credentials: SwitchBotCredent
   }
 }
 
-// Confronta códigos pending/deleting com a lista real do keypad. É a fonte de verdade:
-// o webhook só acelera este passo e nunca é confiado sozinho para ativar um código.
+// Confronta os códigos com a lista real do keypad. É a fonte de verdade: o
+// webhook só acelera este passo e nunca é confiado sozinho para ativar um código.
+// Inclui falhas recentes, porque o keypad pode criar o código depois do timeout.
 export async function reconcileCodes(client: SupabaseClient, credentials: SwitchBotCredentials, summary: SyncSummary) {
+  const lateFailureWindow = new Date(Date.now() - LATE_FAILURE_WINDOW_MS).toISOString();
   const { data: codes, error } = await client
     .from('access_codes')
-    .select('id, keypad_id, key_name, status, created_at, updated_at, access_keypads(switchbot_device_id)')
-    .in('status', ['pending', 'deleting']);
+    .select('id, reservation_id, keypad_id, key_name, status, created_at, updated_at, access_keypads(switchbot_device_id)')
+    .or(`status.in.(pending,deleting),and(status.eq.failed,created_at.gte.${lateFailureWindow})`);
   if (error) throw new Error('Não foi possível ler os códigos por confirmar.');
   if (!codes?.length) return;
 
@@ -201,6 +237,28 @@ export async function reconcileCodes(client: SupabaseClient, credentials: Switch
       } else if (now - new Date(code.created_at).getTime() > PENDING_TIMEOUT_MS) {
         await updateCode(client, code.id, { status: 'failed', last_error: 'O keypad não confirmou o código. Hub offline?' });
         summary.failed++;
+      }
+    } else if (code.status === 'failed') {
+      if (!match || !keypad) continue;
+      // O keypad criou-o depois do timeout. Se a reserva ainda não tem outro código
+      // passa a ativo (e é apagado no fim da estadia como os outros); senão apaga-se já.
+      const { count } = await client
+        .from('access_codes')
+        .select('id', { count: 'exact', head: true })
+        .eq('reservation_id', code.reservation_id)
+        .eq('keypad_id', code.keypad_id)
+        .in('status', LIVE_CODE_STATUSES);
+      try {
+        if (!count) {
+          await updateCode(client, code.id, { status: 'active', switchbot_key_id: String(match.id), last_error: null });
+          summary.activated++;
+        } else {
+          const commandId = await deleteKey(credentials, keypad.switchbot_device_id, String(match.id));
+          await updateCode(client, code.id, { status: 'deleting', switchbot_key_id: String(match.id), switchbot_command_id: commandId });
+          summary.revoked++;
+        }
+      } catch (lateError) {
+        await updateCode(client, code.id, { last_error: errorMessage(lateError) });
       }
     } else if (deviceKeys && !match) {
       await updateCode(client, code.id, { status: 'deleted', last_error: null });
