@@ -118,8 +118,8 @@ export async function listKeypads(credentials: SwitchBotCredentials): Promise<Ke
     }));
 }
 
-// Código de 8 dígitos sem padrões óbvios (todos iguais, sequências).
-export function generatePasscode(length = 8): string {
+// Código numérico (6 dígitos por omissão) sem padrões óbvios (todos iguais, sequências).
+export function generatePasscode(length = 6): string {
   for (;;) {
     const digits = Array.from(crypto.getRandomValues(new Uint8Array(length * 2)))
       .filter((byte) => byte < 250)

@@ -19,12 +19,12 @@ Deno.test('Hora local de Lisboa converte para UTC no inverno e no verão', () =>
   assertEquals(zonedTime('2026-03-29', '11:00', 'Europe/Lisbon').toISOString(), '2026-03-29T10:00:00.000Z', 'Dia da mudança de hora');
 });
 
-Deno.test('Os códigos gerados têm 8 dígitos e evitam padrões óbvios', () => {
+Deno.test('Os códigos gerados têm 6 dígitos e evitam padrões óbvios', () => {
   for (let attempt = 0; attempt < 500; attempt++) {
     const passcode = generatePasscode();
-    if (!/^\d{8}$/.test(passcode) || isWeakPasscode(passcode)) throw new Error(`Código inválido: ${passcode}`);
+    if (!/^\d{6}$/.test(passcode) || isWeakPasscode(passcode)) throw new Error(`Código inválido: ${passcode}`);
   }
-  for (const weak of ['11111111', '12345678', '87654321', '90123456']) {
+  for (const weak of ['111111', '123456', '654321', '901234', '12345678']) {
     if (!isWeakPasscode(weak)) throw new Error(`${weak} devia ser considerado fraco`);
   }
 });

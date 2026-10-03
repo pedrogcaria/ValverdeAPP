@@ -38,7 +38,7 @@ Migração `20261003172844_switchbot_access_codes.sql` e Edge Functions
 Vision emparelhado com a fechadura e um Hub com Cloud Service ativo.
 
 Fluxo: quando uma reserva passa a `confirmed` (ou `checked_in`), um trigger chama
-`switchbot-sync`, que cria no keypad um código `timeLimit` de 8 dígitos válido das
+`switchbot-sync`, que cria no keypad um código `timeLimit` de 6 dígitos com o nome do hóspede válido das
 `access_code_valid_from` (00:00) do dia de entrada às `access_code_valid_until`
 (23:59) do dia de saída, hora local da villa. Cancelamentos, fim da estadia e
 alterações de datas apagam o código no keypad (alteração de datas gera um código
