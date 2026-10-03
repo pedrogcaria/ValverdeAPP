@@ -30,7 +30,7 @@ Deno.serve(async (request) => {
         .eq('switchbot_command_id', context.commandId)
         .eq('status', 'pending');
     } else {
-      const summary: SyncSummary = { issued: 0, activated: 0, failed: 0, revoked: 0, deleted: 0, notified: 0 };
+      const summary: SyncSummary = { keypads: 0, issued: 0, activated: 0, failed: 0, revoked: 0, deleted: 0, notified: 0 };
       await reconcileCodes(client, switchBotCredentials(), summary);
     }
   } catch (error) {

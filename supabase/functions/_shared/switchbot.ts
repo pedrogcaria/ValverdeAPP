@@ -106,6 +106,18 @@ export async function listKeypadKeys(credentials: SwitchBotCredentials): Promise
   return keys;
 }
 
+export type KeypadDevice = { deviceId: string; deviceName: string; deviceType: string; hubDeviceId: string | null; enableCloudService: boolean };
+
+// Keypads e fechaduras da conta, para a configuração inicial. Não inclui códigos.
+export async function listKeypads(credentials: SwitchBotCredentials): Promise<KeypadDevice[]> {
+  const body = await call<{ deviceList?: (KeypadDevice & { keyList?: unknown })[] }>(credentials, 'GET', '/devices');
+  return (body?.deviceList ?? [])
+    .filter((device) => /keypad|lock/i.test(device.deviceType ?? ''))
+    .map(({ deviceId, deviceName, deviceType, hubDeviceId, enableCloudService }) => ({
+      deviceId, deviceName, deviceType, hubDeviceId: hubDeviceId ?? null, enableCloudService: Boolean(enableCloudService)
+    }));
+}
+
 // Código de 8 dígitos sem padrões óbvios (todos iguais, sequências).
 export function generatePasscode(length = 8): string {
   for (;;) {

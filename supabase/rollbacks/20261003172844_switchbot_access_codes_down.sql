@@ -13,3 +13,5 @@ alter table public.property_settings
   drop column if exists access_code_valid_until;
 -- pg_net e pg_cron ficam instalados: são inofensivos e podem ser usados por outros jobs.
 delete from vault.secrets where name in ('access_codes_sync_url', 'access_codes_cron_secret');
+-- Reversão de 20261003175105_access_codes_vault_secret.sql (aplicar antes da anterior).
+drop function if exists public.access_codes_cron_secret_matches(text);

@@ -54,26 +54,29 @@ Segredos adicionais:
 - `SWITCHBOT_TOKEN` e `SWITCHBOT_SECRET` (app SwitchBot → Perfil → Preferências →
   tocar 10× na versão → Developer Options)
 - `SWITCHBOT_WEBHOOK_TOKEN` (aleatório, ≥ 32 caracteres)
-- `ACCESS_CODES_CRON_SECRET` (aleatório, ≥ 32 caracteres)
 - `ACCESS_CODE_EMAIL_GUESTS=true` para enviar o código ao hóspede por email (com
   BCC para `BOOKING_NOTIFICATION_TO`). Sem esta variável o código só aparece na gestão.
 
 Configuração inicial (QA primeiro):
 
-1. Aplicar a migração e publicar `switchbot-sync` e `switchbot-webhook`.
+1. Aplicar as migrações e publicar `switchbot-sync` e `switchbot-webhook`.
 2. Obter o `deviceId` do keypad (`GET https://api.switch-bot.com/v1.1/devices`) e
    registá-lo: `insert into public.access_keypads (owner_id, label, switchbot_device_id)
    values ('<UUID_DO_GESTOR>', 'Porta principal', '<DEVICE_ID>');`
 3. Registar o webhook na SwitchBot (só existe um por conta):
    `POST /v1.1/webhook/setupWebhook` com
    `{"action":"setupWebhook","url":"https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-webhook?token=<SWITCHBOT_WEBHOOK_TOKEN>","deviceList":"ALL"}`.
-4. Guardar no Vault o URL e o segredo usados pelo trigger e pelo `pg_cron`
-   (o job já é criado pela migração e não faz nada enquanto faltarem):
+4. Guardar no Vault o URL da função (o segredo `access_codes_cron_secret` é gerado
+   pela migração `20261003175105_access_codes_vault_secret.sql` e validado pela
+   própria função na base de dados, sem cópia manual):
 
    ```sql
    select vault.create_secret('https://<PROJECT_REF>.supabase.co/functions/v1/switchbot-sync', 'access_codes_sync_url');
-   select vault.create_secret('<ACCESS_CODES_CRON_SECRET>', 'access_codes_cron_secret');
    ```
+
+   Enquanto não houver keypads registados, a resposta de `switchbot-sync` inclui
+   `availableKeypads` com os keypads da conta SwitchBot (consultar em
+   `net._http_response` depois de `select public.request_access_codes_sync();`).
 
 O webhook só acelera a confirmação; se falhar, a execução seguinte do cron
 reconcilia tudo com a lista de códigos do keypad.
