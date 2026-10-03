@@ -91,7 +91,9 @@ export async function deleteKey(credentials: SwitchBotCredentials, keypadDeviceI
   const body = await call<{ commandId?: string }>(credentials, 'POST', `/devices/${encodeURIComponent(keypadDeviceId)}/commands`, {
     commandType: 'command',
     command: 'deleteKey',
-    parameter: { id: keyId }
+    // A documentação contradiz-se (String vs passcode_id_int); o keyList devolve um
+    // número e o keypad ignora a remoção quando o id chega como texto.
+    parameter: { id: /^\d+$/.test(keyId) ? Number(keyId) : keyId }
   });
   return body?.commandId ?? null;
 }
