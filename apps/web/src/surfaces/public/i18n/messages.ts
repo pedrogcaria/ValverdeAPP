@@ -67,7 +67,7 @@ const en = {
       parking: 'Private parking',
       coffee: 'Coffee machine',
       suites: '4 elegant suites',
-      marina: '10 min from the marina'
+      marina: '8 min from the marina'
     }
   },
   pricing: {
@@ -234,7 +234,7 @@ const pt: Messages = {
       parking: 'Estacionamento privado',
       coffee: 'Máquina de café',
       suites: '4 suites elegantes',
-      marina: 'A 10 min da marina'
+      marina: 'A 8 min da marina'
     }
   },
   pricing: {
