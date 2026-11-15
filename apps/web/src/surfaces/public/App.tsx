@@ -5,6 +5,7 @@ import { currency, monthYear } from './lib/format';
 import type { PublicBookingConfig } from './lib/types';
 import { BookingForm } from './components/BookingForm';
 import { PhotoGallery } from './components/PhotoGallery';
+import { GuestReviews } from './components/GuestReviews';
 import { I18nProvider, useI18n } from './i18n/context';
 import { htmlLang, locales, pathForLocale, type Locale } from './i18n/locale';
 import { adminSurfaceUrl } from '../../lib/surface';
@@ -90,6 +91,8 @@ function Site() {
       <section id="galeria" className="section section--sand"><div className="container"><div className="section-heading"><p className="eyebrow">{t.gallery.eyebrow}</p><h2>{t.gallery.titleStart} <em>{t.gallery.titleEmphasis}</em></h2></div><PhotoGallery /></div></section>
 
       <section className="section section--dark"><div className="container"><div className="section-heading section-heading--center"><p className="eyebrow">{t.amenities.eyebrow}</p><h2>{t.amenities.titleStart} <em>{t.amenities.titleEmphasis}</em></h2></div><div className="amenities-grid">{amenities.map(([Icon, key]) => <div key={key}><Icon size={18} /><span>{t.amenities.items[key]}</span></div>)}</div></div></section>
+
+      <GuestReviews />
 
       <section id="precos" className="section section--pricing"><div className="container"><div className="section-heading"><p className="eyebrow">{t.pricing.eyebrow}</p><h2>{t.pricing.titleStart} <em>{t.pricing.titleEmphasis}</em></h2><p>{t.pricing.intro}</p></div><div className="price-note"><ShieldCheck size={22} /><p><strong>{t.pricing.noteTitle}</strong><br />{t.pricing.noteBody}</p></div>{configError ? <p className="price-status">{t.pricing.unavailable}</p> : <div className="rates-grid">{monthlyRates.map((rate) => <article key={`${rate.startsOn}-${rate.endsOn}`}><p>{monthYear(rate.startsOn, intl)}</p><strong>{currency(rate.directNightlyPrice, config?.settings.currency, intl)}</strong><small>{t.pricing.perNight}</small></article>)}</div>}<p className="price-footnote">{t.pricing.footnote(minimumNights)}</p></div></section>
 

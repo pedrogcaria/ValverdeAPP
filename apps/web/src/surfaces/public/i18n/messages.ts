@@ -149,6 +149,15 @@ const en = {
     bodyStart: 'Name, email, phone, dates and message are stored with access restricted to the Villa Valverde manager. You can request information, correction or deletion at',
     bodyEnd: '.'
   },
+  reviews: {
+    eyebrow: 'Guest reviews',
+    titleStart: 'What our guests',
+    titleEmphasis: 'say.',
+    summary: (superb: number, total: number) => `${superb} of ${total} guests rated their stay 9 or 10.`,
+    source: 'Verified reviews from Booking.com.',
+    scoreLabel: (score: string) => `Score: ${score} out of 10`,
+    translatedFrom: { en: 'Translated from English', fr: 'Translated from French', nl: 'Translated from Dutch' }
+  },
   footer: {
     contact: 'Contact reservations',
     admin: 'Management area'
@@ -306,6 +315,15 @@ const pt: Messages = {
     title: 'Os seus dados são tratados apenas para responder ao pedido de reserva.',
     bodyStart: 'Nome, email, telefone, datas e mensagem são guardados com acesso exclusivo do gestor da Villa Valverde. Pode pedir informação, correção ou eliminação através de',
     bodyEnd: '.'
+  },
+  reviews: {
+    eyebrow: 'Avaliações',
+    titleStart: 'O que dizem os nossos',
+    titleEmphasis: 'hóspedes.',
+    summary: (superb, total) => `${superb} em ${total} hóspedes avaliaram a estadia com 9 ou 10.`,
+    source: 'Comentários verificados do Booking.com.',
+    scoreLabel: (score) => `Pontuação: ${score} em 10`,
+    translatedFrom: { en: 'Traduzido do inglês', fr: 'Traduzido do francês', nl: 'Traduzido do neerlandês' }
   },
   footer: {
     contact: 'Contactar reservas',
