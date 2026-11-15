@@ -72,7 +72,9 @@
 .site-header nav a { font-size:.7rem; }
 .facts span { font-size:.68rem; color:rgba(255,255,255,.72); }
 .gallery-tabs button { font-size:.7rem; }
-.rates-grid p { color:rgba(255,255,255,.7); font-size:.7rem; }
+.rates-grid p { color:rgba(255,255,255,.78); font-size:.72rem; line-height:1.7; letter-spacing:.12em; }
+.rates-grid article { min-height:190px; }
+.rates-grid strong { margin-top:18px; }
 .rates-grid small,.price-footnote,.price-status { color:rgba(255,255,255,.66); font-size:.74rem; }
 .booking-panel label > span,.coupon-field > span,.message-field > span { font-size:.7rem; }
 .privacy-check { font-size:.78rem; }.form-footnote { font-size:.74rem; }.field-help,.form-error { font-size:.78rem; }
@@ -95,6 +97,7 @@
   .gallery-photo--fill-3 { grid-column:auto; }.gallery-photo--fill-2 { grid-column:span 2; }
   .lightbox img { max-width:calc(100vw - 24px); }
   .lightbox__nav { width:42px; height:42px; }.lightbox__nav--prev { left:6px; }.lightbox__nav--next { right:6px; }
+  .rates-grid { grid-template-columns:repeat(2,1fr) !important; }.rates-grid article { min-height:150px; }.rates-grid article:last-child:nth-child(odd) { grid-column:span 2; }
   .book-bar { position:fixed; z-index:19; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px calc(10px + env(safe-area-inset-bottom)); background:rgba(22,22,19,.96); color:#fff; box-shadow:0 -1px 0 rgba(255,255,255,.1); transform:translateY(110%); transition:transform .3s ease; }
   .book-bar.is-visible { transform:none; }
   .book-bar p { margin:0; font-family:'Cormorant Garamond',serif; font-size:1.15rem; white-space:nowrap; }

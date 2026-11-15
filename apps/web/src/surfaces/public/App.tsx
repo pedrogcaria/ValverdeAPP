@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { ArrowDown, BedDouble, Car, ChefHat, Coffee, Menu, ParkingCircle, ShieldCheck, Sparkles, TreePine, Wifi, X } from 'lucide-react';
 import { getPublicBookingConfig } from './lib/api';
-import { currency, monthYear } from './lib/format';
+import { currency, todayIso } from './lib/format';
+import { monthRanges, priceBands } from './lib/rates';
 import type { PublicBookingConfig } from './lib/types';
 import { BookingForm } from './components/BookingForm';
 import { PhotoGallery } from './components/PhotoGallery';
@@ -70,10 +71,10 @@ function Site() {
     getPublicBookingConfig().then(setConfig).catch((error: Error) => setConfigError(error.message));
   }, []);
 
-  const monthlyRates = useMemo(() => config?.rates.slice(0, 12) ?? [], [config]);
+  const bands = useMemo(() => priceBands(config?.rates ?? [], todayIso()), [config]);
   const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'reservas@villavalverde.pt';
   const adminUrl = adminSurfaceUrl(window.location);
-  const lowestRate = monthlyRates.length ? Math.min(...monthlyRates.map((rate) => rate.directNightlyPrice)) : undefined;
+  const lowestRate = bands[0]?.price;
   const minimumNights = config?.settings.minimumNights ?? 7;
   const closeMenu = () => setNavOpen(false);
 
@@ -111,7 +112,7 @@ function Site() {
 
       <GuestReviews />
 
-      <section id="precos" className="section section--pricing"><div className="container"><div className="section-heading"><p className="eyebrow">{t.pricing.eyebrow}</p><h2>{t.pricing.titleStart} <em>{t.pricing.titleEmphasis}</em></h2><p>{t.pricing.intro}</p></div><div className="price-note"><ShieldCheck size={22} /><p><strong>{t.pricing.noteTitle}</strong><br />{t.pricing.noteBody}</p></div>{configError ? <p className="price-status">{t.pricing.unavailable}</p> : <div className="rates-grid">{monthlyRates.map((rate) => <article key={`${rate.startsOn}-${rate.endsOn}`}><p>{monthYear(rate.startsOn, intl)}</p><strong>{currency(rate.directNightlyPrice, config?.settings.currency, intl)}</strong><small>{t.pricing.perNight}</small></article>)}</div>}<p className="price-footnote">{t.pricing.footnote(minimumNights)}</p></div></section>
+      <section id="precos" className="section section--pricing"><div className="container"><div className="section-heading"><p className="eyebrow">{t.pricing.eyebrow}</p><h2>{t.pricing.titleStart} <em>{t.pricing.titleEmphasis}</em></h2><p>{t.pricing.intro}</p></div><div className="price-note"><ShieldCheck size={22} /><p><strong>{t.pricing.noteTitle}</strong><br />{t.pricing.noteBody}</p></div>{configError ? <p className="price-status">{t.pricing.unavailable}</p> : <div className="rates-grid" style={{ gridTemplateColumns: `repeat(${Math.max(bands.length, 1)}, 1fr)` }}>{bands.map((band) => <article key={band.price}><p>{monthRanges(band.months, intl)}</p><strong>{currency(band.price, config?.settings.currency, intl)}</strong><small>{t.pricing.perNight}</small></article>)}</div>}<p className="price-footnote">{t.pricing.footnote(minimumNights)}</p></div></section>
 
       <section id="pedido" className="section section--booking"><div className="container booking-layout"><div className="booking-intro"><p className="eyebrow">{t.booking.eyebrow}</p><h2>{t.booking.titleStart} <em>{t.booking.titleEmphasis}</em></h2><p>{t.booking.intro}</p><div className="booking-intro__image"><img src="/images/pool4.jpg" alt={t.booking.imageAlt} /></div></div><BookingForm config={config} /></div></section>
 
