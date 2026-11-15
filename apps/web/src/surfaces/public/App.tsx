@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { ArrowDown, BedDouble, Car, ChefHat, Coffee, Menu, ParkingCircle, ShieldCheck, Sparkles, TreePine, Wifi, X } from 'lucide-react';
 import { getPublicBookingConfig } from './lib/api';
-import { currency, monthYear } from './lib/format';
+import { currency, todayIso } from './lib/format';
+import { monthRanges, priceBands } from './lib/rates';
 import type { PublicBookingConfig } from './lib/types';
 import { BookingForm } from './components/BookingForm';
 import { PhotoGallery } from './components/PhotoGallery';
@@ -42,6 +43,8 @@ function Site() {
   const { t, intl } = useI18n();
   const [activeHero, setActiveHero] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [bookBar, setBookBar] = useState(false);
   const [config, setConfig] = useState<PublicBookingConfig | null>(null);
   const [configError, setConfigError] = useState<string>();
 
@@ -50,23 +53,38 @@ function Site() {
     return () => window.clearInterval(timer);
   }, []);
 
+  // O cabeçalho ganha fundo ao descer, e no telemóvel a barra de reserva aparece
+  // depois do topo e esconde-se quando o formulário de reserva já está à vista.
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+      const booking = document.getElementById('pedido')?.getBoundingClientRect();
+      const bookingInView = Boolean(booking && booking.top < window.innerHeight && booking.bottom > 0);
+      setBookBar(window.scrollY > window.innerHeight * 0.6 && !bookingInView);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   useEffect(() => {
     getPublicBookingConfig().then(setConfig).catch((error: Error) => setConfigError(error.message));
   }, []);
 
-  const monthlyRates = useMemo(() => config?.rates.slice(0, 12) ?? [], [config]);
+  const bands = useMemo(() => priceBands(config?.rates ?? [], todayIso()), [config]);
   const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'reservas@villavalverde.pt';
   const adminUrl = adminSurfaceUrl(window.location);
+  const lowestRate = bands[0]?.price;
   const minimumNights = config?.settings.minimumNights ?? 7;
   const closeMenu = () => setNavOpen(false);
 
   return (
     <main>
-      <header className="site-header">
+      <header className={`site-header ${scrolled || navOpen ? 'is-scrolled' : ''}`}>
         <a className="brand" href="#inicio" aria-label={t.nav.home}>Villa <em>Valverde</em></a>
         <button className="menu-toggle" onClick={() => setNavOpen((open) => !open)} aria-expanded={navOpen} aria-label={navOpen ? t.nav.closeMenu : t.nav.openMenu}>{navOpen ? <X /> : <Menu />}</button>
         <nav className={navOpen ? 'is-open' : ''}>
-          <a onClick={closeMenu} href="#villa">{t.nav.villa}</a><a onClick={closeMenu} href="#galeria">{t.nav.gallery}</a><a onClick={closeMenu} href="#precos">{t.nav.prices}</a><a onClick={closeMenu} href="#pedido">{t.nav.book}</a><a onClick={closeMenu} href="#localizacao">{t.nav.location}</a>
+          <a onClick={closeMenu} href="#villa">{t.nav.villa}</a><a onClick={closeMenu} href="#galeria">{t.nav.gallery}</a><a onClick={closeMenu} href="#precos">{t.nav.prices}</a><a className="nav-cta" onClick={closeMenu} href="#pedido">{t.nav.book}</a><a onClick={closeMenu} href="#localizacao">{t.nav.location}</a>
           <LanguageSwitch onSelect={closeMenu} />
         </nav>
       </header>
@@ -94,13 +112,18 @@ function Site() {
 
       <GuestReviews />
 
-      <section id="precos" className="section section--pricing"><div className="container"><div className="section-heading"><p className="eyebrow">{t.pricing.eyebrow}</p><h2>{t.pricing.titleStart} <em>{t.pricing.titleEmphasis}</em></h2><p>{t.pricing.intro}</p></div><div className="price-note"><ShieldCheck size={22} /><p><strong>{t.pricing.noteTitle}</strong><br />{t.pricing.noteBody}</p></div>{configError ? <p className="price-status">{t.pricing.unavailable}</p> : <div className="rates-grid">{monthlyRates.map((rate) => <article key={`${rate.startsOn}-${rate.endsOn}`}><p>{monthYear(rate.startsOn, intl)}</p><strong>{currency(rate.directNightlyPrice, config?.settings.currency, intl)}</strong><small>{t.pricing.perNight}</small></article>)}</div>}<p className="price-footnote">{t.pricing.footnote(minimumNights)}</p></div></section>
+      <section id="precos" className="section section--pricing"><div className="container"><div className="section-heading"><p className="eyebrow">{t.pricing.eyebrow}</p><h2>{t.pricing.titleStart} <em>{t.pricing.titleEmphasis}</em></h2><p>{t.pricing.intro}</p></div><div className="price-note"><ShieldCheck size={22} /><p><strong>{t.pricing.noteTitle}</strong><br />{t.pricing.noteBody}</p></div>{configError ? <p className="price-status">{t.pricing.unavailable}</p> : <div className="rates-grid" style={{ gridTemplateColumns: `repeat(${Math.max(bands.length, 1)}, 1fr)` }}>{bands.map((band) => <article key={band.price}><p>{monthRanges(band.months, intl)}</p><strong>{currency(band.price, config?.settings.currency, intl)}</strong><small>{t.pricing.perNight}</small></article>)}</div>}<p className="price-footnote">{t.pricing.footnote(minimumNights)}</p></div></section>
 
       <section id="pedido" className="section section--booking"><div className="container booking-layout"><div className="booking-intro"><p className="eyebrow">{t.booking.eyebrow}</p><h2>{t.booking.titleStart} <em>{t.booking.titleEmphasis}</em></h2><p>{t.booking.intro}</p><div className="booking-intro__image"><img src="/images/pool4.jpg" alt={t.booking.imageAlt} /></div></div><BookingForm config={config} /></div></section>
 
       <section id="localizacao" className="section section--location"><div className="container location-grid"><div><p className="eyebrow">{t.location.eyebrow}</p><h2>{t.location.titleStart} <em>{t.location.titleEmphasis}</em></h2><p>{t.location.body}</p></div><dl><div><dt>{t.location.marina}</dt><dd>{new Intl.NumberFormat(intl).format(4.8)} km</dd></div><div><dt>{t.location.golf}</dt><dd>5 min</dd></div><div><dt>{t.location.beach}</dt><dd>5 min</dd></div><div><dt>{t.location.airport}</dt><dd>23 km</dd></div></dl></div></section>
 
       <section id="privacidade" className="privacy"><div className="container"><p className="eyebrow">{t.privacy.eyebrow}</p><h2>{t.privacy.title}</h2><p>{t.privacy.bodyStart} <a href={`mailto:${contactEmail}`}>{contactEmail}</a>{t.privacy.bodyEnd}</p></div></section>
+
+      <div className={`book-bar ${bookBar && !navOpen ? 'is-visible' : ''}`} aria-hidden={!bookBar || navOpen}>
+        <p>{lowestRate !== undefined && t.pricing.from(currency(lowestRate, config?.settings.currency, intl))}</p>
+        <a className="button button--primary" href="#pedido" tabIndex={bookBar && !navOpen ? 0 : -1}>{t.hero.primaryAction}</a>
+      </div>
 
       <footer><div className="container footer-content"><div><a className="brand" href="#inicio">Villa <em>Valverde</em></a><p>Vilamoura · Algarve</p></div><div><a href={`mailto:${contactEmail}`}>{t.footer.contact}</a><a href={adminUrl}>{t.footer.admin}</a></div><p>© {new Date().getFullYear()} Villa Valverde</p></div></footer>
     </main>

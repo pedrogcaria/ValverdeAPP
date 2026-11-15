@@ -53,7 +53,9 @@ const en = {
     planNote: 'Illustrative image. Furniture and garden may differ from the villa.',
     openPhoto: (section: string) => `Open photo: ${section}`,
     enlarged: 'Enlarged photo',
-    closePhoto: 'Close photo'
+    closePhoto: 'Close photo',
+    previousPhoto: 'Previous photo',
+    nextPhoto: 'Next photo'
   },
   amenities: {
     eyebrow: 'Amenities',
@@ -67,7 +69,7 @@ const en = {
       parking: 'Private parking',
       coffee: 'Coffee machine',
       suites: '4 elegant suites',
-      marina: '5 min from the marina'
+      marina: '8 min from the marina'
     }
   },
   pricing: {
@@ -79,6 +81,7 @@ const en = {
     noteBody: 'Prices are set by the villa management. Have a discount code? Add it to your booking request.',
     unavailable: 'Prices will be available soon.',
     perNight: 'per night',
+    from: (price: string) => `From ${price} / night`,
     footnote: (nights: number) => `* Minimum stay: ${nights} nights. For up to 9 guests.`
   },
   booking: {
@@ -220,7 +223,9 @@ const pt: Messages = {
     planNote: 'Imagem ilustrativa. O mobiliário e o jardim podem diferir da villa.',
     openPhoto: (section) => `Abrir fotografia: ${section}`,
     enlarged: 'Fotografia ampliada',
-    closePhoto: 'Fechar fotografia'
+    closePhoto: 'Fechar fotografia',
+    previousPhoto: 'Fotografia anterior',
+    nextPhoto: 'Fotografia seguinte'
   },
   amenities: {
     eyebrow: 'Comodidades',
@@ -234,7 +239,7 @@ const pt: Messages = {
       parking: 'Estacionamento privado',
       coffee: 'Máquina de café',
       suites: '4 suites elegantes',
-      marina: 'A 5 min da marina'
+      marina: 'A 8 min da marina'
     }
   },
   pricing: {
@@ -246,6 +251,7 @@ const pt: Messages = {
     noteBody: 'Os valores são definidos pela gestão da villa. Tem um código de desconto? Indique-o no pedido de reserva.',
     unavailable: 'Os preços serão disponibilizados em breve.',
     perNight: 'por noite',
+    from: (price) => `Desde ${price} / noite`,
     footnote: (nights) => `* Estadia mínima: ${nights} noites. Para até 9 hóspedes.`
   },
   booking: {
