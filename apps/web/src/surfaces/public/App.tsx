@@ -42,12 +42,28 @@ function Site() {
   const { t, intl } = useI18n();
   const [activeHero, setActiveHero] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [bookBar, setBookBar] = useState(false);
   const [config, setConfig] = useState<PublicBookingConfig | null>(null);
   const [configError, setConfigError] = useState<string>();
 
   useEffect(() => {
     const timer = window.setInterval(() => setActiveHero((current) => (current + 1) % heroPhotos.length), 5500);
     return () => window.clearInterval(timer);
+  }, []);
+
+  // O cabeçalho ganha fundo ao descer, e no telemóvel a barra de reserva aparece
+  // depois do topo e esconde-se quando o formulário de reserva já está à vista.
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+      const booking = document.getElementById('pedido')?.getBoundingClientRect();
+      const bookingInView = Boolean(booking && booking.top < window.innerHeight && booking.bottom > 0);
+      setBookBar(window.scrollY > window.innerHeight * 0.6 && !bookingInView);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
@@ -57,16 +73,17 @@ function Site() {
   const monthlyRates = useMemo(() => config?.rates.slice(0, 12) ?? [], [config]);
   const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || 'reservas@villavalverde.pt';
   const adminUrl = adminSurfaceUrl(window.location);
+  const lowestRate = monthlyRates.length ? Math.min(...monthlyRates.map((rate) => rate.directNightlyPrice)) : undefined;
   const minimumNights = config?.settings.minimumNights ?? 7;
   const closeMenu = () => setNavOpen(false);
 
   return (
     <main>
-      <header className="site-header">
+      <header className={`site-header ${scrolled || navOpen ? 'is-scrolled' : ''}`}>
         <a className="brand" href="#inicio" aria-label={t.nav.home}>Villa <em>Valverde</em></a>
         <button className="menu-toggle" onClick={() => setNavOpen((open) => !open)} aria-expanded={navOpen} aria-label={navOpen ? t.nav.closeMenu : t.nav.openMenu}>{navOpen ? <X /> : <Menu />}</button>
         <nav className={navOpen ? 'is-open' : ''}>
-          <a onClick={closeMenu} href="#villa">{t.nav.villa}</a><a onClick={closeMenu} href="#galeria">{t.nav.gallery}</a><a onClick={closeMenu} href="#precos">{t.nav.prices}</a><a onClick={closeMenu} href="#pedido">{t.nav.book}</a><a onClick={closeMenu} href="#localizacao">{t.nav.location}</a>
+          <a onClick={closeMenu} href="#villa">{t.nav.villa}</a><a onClick={closeMenu} href="#galeria">{t.nav.gallery}</a><a onClick={closeMenu} href="#precos">{t.nav.prices}</a><a className="nav-cta" onClick={closeMenu} href="#pedido">{t.nav.book}</a><a onClick={closeMenu} href="#localizacao">{t.nav.location}</a>
           <LanguageSwitch onSelect={closeMenu} />
         </nav>
       </header>
@@ -101,6 +118,11 @@ function Site() {
       <section id="localizacao" className="section section--location"><div className="container location-grid"><div><p className="eyebrow">{t.location.eyebrow}</p><h2>{t.location.titleStart} <em>{t.location.titleEmphasis}</em></h2><p>{t.location.body}</p></div><dl><div><dt>{t.location.marina}</dt><dd>{new Intl.NumberFormat(intl).format(4.8)} km</dd></div><div><dt>{t.location.golf}</dt><dd>5 min</dd></div><div><dt>{t.location.beach}</dt><dd>5 min</dd></div><div><dt>{t.location.airport}</dt><dd>23 km</dd></div></dl></div></section>
 
       <section id="privacidade" className="privacy"><div className="container"><p className="eyebrow">{t.privacy.eyebrow}</p><h2>{t.privacy.title}</h2><p>{t.privacy.bodyStart} <a href={`mailto:${contactEmail}`}>{contactEmail}</a>{t.privacy.bodyEnd}</p></div></section>
+
+      <div className={`book-bar ${bookBar && !navOpen ? 'is-visible' : ''}`} aria-hidden={!bookBar || navOpen}>
+        <p>{lowestRate !== undefined && t.pricing.from(currency(lowestRate, config?.settings.currency, intl))}</p>
+        <a className="button button--primary" href="#pedido" tabIndex={bookBar && !navOpen ? 0 : -1}>{t.hero.primaryAction}</a>
+      </div>
 
       <footer><div className="container footer-content"><div><a className="brand" href="#inicio">Villa <em>Valverde</em></a><p>Vilamoura · Algarve</p></div><div><a href={`mailto:${contactEmail}`}>{t.footer.contact}</a><a href={adminUrl}>{t.footer.admin}</a></div><p>© {new Date().getFullYear()} Villa Valverde</p></div></footer>
     </main>

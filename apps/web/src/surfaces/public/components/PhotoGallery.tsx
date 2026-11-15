@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n } from '../i18n/context';
 
 type GalleryTab = 'exterior' | 'living' | 'bedrooms' | 'bathrooms' | 'plan';
@@ -21,11 +22,42 @@ function revealTab(button: HTMLButtonElement) {
   bar.scrollTo({ left: button.offsetLeft - (bar.clientWidth - button.offsetWidth) / 2, behavior: 'smooth' });
 }
 
+// A primeira foto ocupa duas colunas. Quando a última linha ficaria com um espaço
+// vazio, a última foto também alarga: em 3 colunas (computador) ou em 2 (telemóvel).
+function photoClass(index: number, total: number): string {
+  const classes = ['gallery-photo'];
+  if (index === 0) classes.push('gallery-photo--wide');
+  if (index === total - 1 && index > 0) {
+    if ((total + 1) % 3 === 2) classes.push('gallery-photo--fill-3');
+    if (total % 2 === 0) classes.push('gallery-photo--fill-2');
+  }
+  return classes.join(' ');
+}
+
 export function PhotoGallery() {
   const { t } = useI18n();
   const labels = t.gallery.tabs;
   const [tab, setTab] = useState<GalleryTab>('exterior');
-  const [activePhoto, setActivePhoto] = useState<string>();
+  const [activeIndex, setActiveIndex] = useState<number>();
+  const touchStart = useRef<number | undefined>(undefined);
+  const photos = galleries[tab];
+  const activePhoto = activeIndex === undefined ? undefined : photos[activeIndex];
+
+  const close = useCallback(() => setActiveIndex(undefined), []);
+  const step = useCallback((delta: number) => {
+    setActiveIndex((current) => current === undefined ? current : (current + delta + photos.length) % photos.length);
+  }, [photos.length]);
+
+  useEffect(() => {
+    if (activeIndex === undefined) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+      if (event.key === 'ArrowRight') step(1);
+      if (event.key === 'ArrowLeft') step(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeIndex, close, step]);
 
   return (
     <>
@@ -39,21 +71,36 @@ export function PhotoGallery() {
       {tab === 'plan' ? (
         // A planta mostra-se inteira: recortada para a grelha perderia a leitura da casa.
         <figure className="gallery-plan">
-          <button onClick={() => setActivePhoto('floor-plan')} aria-label={t.gallery.openPhoto(labels.plan)}>
+          <button onClick={() => setActiveIndex(0)} aria-label={t.gallery.openPhoto(labels.plan)}>
             <img src="/images/floor-plan.jpg" alt={t.gallery.planAlt} loading="lazy" />
           </button>
           <figcaption>{t.gallery.planNote}</figcaption>
         </figure>
       ) : <div className="gallery-grid">
-        {galleries[tab].map((photo, index) => (
-          <button key={photo} className={`gallery-photo ${index === 0 ? 'gallery-photo--wide' : ''}`} onClick={() => setActivePhoto(photo)} aria-label={t.gallery.openPhoto(labels[tab])}>
+        {photos.map((photo, index) => (
+          <button key={photo} className={photoClass(index, photos.length)} onClick={() => setActiveIndex(index)} aria-label={t.gallery.openPhoto(labels[tab])}>
             <img src={`/images/${photo}.jpg`} alt="Villa Valverde" loading="lazy" style={focus[photo] ? { objectPosition: focus[photo] } : undefined} />
           </button>
         ))}
       </div>}
-      {activePhoto && (
-        <div className="lightbox" role="dialog" aria-modal="true" aria-label={t.gallery.enlarged} onClick={() => setActivePhoto(undefined)}>
-          <button className="lightbox__close" onClick={() => setActivePhoto(undefined)} aria-label={t.gallery.closePhoto}>×</button>
+      {activePhoto && activeIndex !== undefined && (
+        <div
+          className="lightbox" role="dialog" aria-modal="true" aria-label={t.gallery.enlarged} onClick={close}
+          onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX; }}
+          onTouchEnd={(event) => {
+            const start = touchStart.current;
+            const end = event.changedTouches[0]?.clientX;
+            touchStart.current = undefined;
+            if (start === undefined || end === undefined || Math.abs(end - start) < 45) return;
+            step(end < start ? 1 : -1);
+          }}
+        >
+          <button className="lightbox__close" onClick={close} aria-label={t.gallery.closePhoto}>×</button>
+          {photos.length > 1 && <>
+            <button className="lightbox__nav lightbox__nav--prev" onClick={(event) => { event.stopPropagation(); step(-1); }} aria-label={t.gallery.previousPhoto}><ChevronLeft size={30} /></button>
+            <button className="lightbox__nav lightbox__nav--next" onClick={(event) => { event.stopPropagation(); step(1); }} aria-label={t.gallery.nextPhoto}><ChevronRight size={30} /></button>
+            <p className="lightbox__count" aria-live="polite">{activeIndex + 1} / {photos.length}</p>
+          </>}
           <img src={`/images/${activePhoto}.jpg`} alt="Villa Valverde" onClick={(event) => event.stopPropagation()} />
         </div>
       )}
